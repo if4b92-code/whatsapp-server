@@ -9,40 +9,33 @@ import { VerifyTicketPage } from './pages/VerifyTicketPage';
 import { dbService } from './services/db';
 
 const App: React.FC = () => {
-  // State-based routing
   const [currentView, setCurrentView] = useState<string>('home');
   const [verifyCode, setVerifyCode] = useState<string>('');
 
   useEffect(() => {
-      // URL Parameter Handling for QR Codes & MP Returns
       const params = new URLSearchParams(window.location.search);
       const viewParam = params.get('view');
       const codeParam = params.get('code');
       
-      // Mercado Pago Return Params
       const status = params.get('collection_status') || params.get('status');
       const externalRef = params.get('external_reference');
 
-      // Wompi Return
       const wompiId = params.get('id'); 
-      const refParam = params.get('reference'); // PaymentService adds this to redirect URL
+      const refParam = params.get('reference');
 
       if (viewParam === 'verify' && codeParam) {
           setVerifyCode(codeParam);
           setCurrentView('verify');
       }
       
-      // Handle Successful Payment Return from Mercado Pago
       if (status === 'approved' && externalRef) {
           finishPurchase(externalRef, 'MercadoPago');
       }
 
-      // Handle Wompi Return
       if (wompiId) {
            if (refParam) {
                finishPurchase(refParam, 'Wompi');
            } else {
-               // Fallback if reference missing
                alert("Pago Wompi detectado. Ve a Mis Tickets para verificar estado.");
                setCurrentView('wallet');
            }
@@ -51,39 +44,40 @@ const App: React.FC = () => {
   }, []);
 
   const finishPurchase = (code: string, gateway: string) => {
-      // We need to clear the URL so it doesn't re-trigger on refresh
       window.history.replaceState({}, '', '/'); 
       
-      // Execute purchase / Confirm Pending
       dbService.approveTicketManually(code).then(result => {
           if (result) {
               alert(`¡Pago Exitoso vía ${gateway}! Tu ticket ha sido activado.`);
-              setCurrentView('wallet');
+              setVerifyCode(code);
+              setCurrentView('verify');
           } else {
               alert("Info: Error activando ticket");
-              setCurrentView('wallet'); // Go to wallet anyway to see status
+              setCurrentView('wallet');
           }
       });
   };
 
-  const handleBuyClick = () => {
-    setCurrentView('buy');
-  };
+  const handleBuySuccess = (stickerCode: string) => {
+    setVerifyCode(stickerCode);
+    setCurrentView('verify');
+    window.history.pushState({}, '', `/?view=verify&code=${stickerCode}`);
+  }
 
   const renderView = () => {
     switch (currentView) {
       case 'home':
-        return <HomePage onBuyClick={handleBuyClick} />;
+        return <HomePage onBuyClick={() => setCurrentView('buy')} />;
       case 'buy':
-        return <BuyStickerPage onSuccess={() => setCurrentView('wallet')} onBack={() => setCurrentView('home')} />;
+        return <BuyStickerPage onSuccess={handleBuySuccess} onBack={() => setCurrentView('home')} />;
       case 'wallet':
-        return <WalletPage />;
+        return <WalletPage onSuccess={handleBuySuccess} />;
       case 'admin':
         return <AdminDashboard />;
       case 'verify':
         return <VerifyTicketPage code={verifyCode} onHome={() => setCurrentView('home')} />;
       default:
-        return <HomePage onBuyClick={handleBuyClick} />;
+        return <HomePage onBuyClick={() => setCurrentView('buy')} />;
     }
   };
 

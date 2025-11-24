@@ -97,7 +97,6 @@ export const dbService = {
   payWithWallet: async (phone: string, stickerId: string, amount: number): Promise<{ success: boolean, message: string }> => {
     if (!isCloudEnabled || !supabase) return { success: false, message: "Database not connected" };
 
-    // 1. Get current balance
     const { data: walletData, error: walletError } = await supabase
       .from('wallets')
       .select('balance')
@@ -112,7 +111,6 @@ export const dbService = {
       return { success: false, message: 'Saldo insuficiente.' };
     }
 
-    // 2. Deduct balance
     const newBalance = walletData.balance - amount;
     const { error: updateWalletError } = await supabase
       .from('wallets')
@@ -120,13 +118,10 @@ export const dbService = {
       .eq('phone', phone);
       
     if (updateWalletError) {
-        // NOTE: This is not a transaction. If the next step fails, the user balance will be incorrect.
-        // An RPC function in Supabase would be a safer way to handle this.
         console.error('Error updating wallet:', updateWalletError);
         return { success: false, message: 'Error al actualizar billetera.' };
     }
 
-    // 3. Activate ticket
     const { error: updateStickerError } = await supabase
       .from('stickers')
       .update({ status: 'active', purchasedAt: new Date().toISOString() })
@@ -135,7 +130,6 @@ export const dbService = {
 
     if (updateStickerError) {
       console.error('Error activating sticker:', updateStickerError);
-      // Attempt to refund the user since the sticker activation failed.
       await supabase.from('wallets').update({ balance: walletData.balance }).eq('phone', phone);
       return { success: false, message: 'Error al activar el ticket. Se ha devuelto el saldo.' };
     }
@@ -271,5 +265,37 @@ export const dbService = {
     }
 
     return true;
+  },
+
+  getStickerByCode: async (code: string): Promise<Sticker | null> => {
+    if (!isCloudEnabled || !supabase) return null;
+
+    const { data, error } = await supabase
+      .from('stickers')
+      .select('*')
+      .eq('code', code)
+      .single();
+
+    if (error) {
+      console.error("Error fetching sticker by code:", error);
+      return null;
+    }
+
+    return data as Sticker;
+  },
+
+  updateStickerOwner: async (stickerId: string, ownerData: Partial<OwnerData>) => {
+    if (!isCloudEnabled || !supabase) return;
+
+    const { data, error } = await supabase
+      .from('stickers')
+      .update({ ownerData })
+      .eq('id', stickerId);
+
+    if (error) {
+      console.error("Error updating sticker owner:", error);
+    }
+
+    return data;
   },
 };

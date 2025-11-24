@@ -27,19 +27,18 @@ export const VerifyTicketPage: React.FC<Props> = ({ code, onHome }) => {
             setLoading(false);
             return;
         }
-        // This function needs to be implemented in the new db.ts
-        // const s = await dbService.getStickerByCode(code);
-        // if (s) {
-        //     setSticker(s);
-        //     if (s.ownerData) {
-        //         setFullName(s.ownerData.fullName || '');
-        //         setPhone(s.ownerData.phone || '');
-        //         setDocId(s.ownerData.documentId || '');
-        //         setSaved(true);
-        //     }
-        // } else {
-        //     setError("Ticket Inválido o No Encontrado");
-        // }
+        const s = await dbService.getStickerByCode(code);
+        if (s) {
+            setSticker(s);
+            if (s.ownerData) {
+                setFullName(s.ownerData.fullName || '');
+                setPhone(s.ownerData.phone || '');
+                setDocId(s.ownerData.documentId || '');
+                setSaved(true);
+            }
+        } else {
+            setError("Ticket Inválido o No Encontrado");
+        }
         setLoading(false);
     };
     load();
@@ -57,8 +56,7 @@ export const VerifyTicketPage: React.FC<Props> = ({ code, onHome }) => {
           claimedAt: new Date().toISOString()
       };
       
-      // This function needs to be implemented in the new db.ts
-      // await dbService.updateStickerOwner(sticker.id, ownerData);
+      await dbService.updateStickerOwner(sticker.id, ownerData);
       setSaved(true);
       setSaving(false);
   };

@@ -6,7 +6,11 @@ import { Sticker, GlobalSettings } from '../types';
 import { QRCodeCanvas } from 'qrcode.react';
 import { Ticket, Star, Calendar, Zap, Phone, ArrowRight, Lock, Clock, Key, HelpCircle, Wallet, X } from 'lucide-react';
 
-export const WalletPage: React.FC = () => {
+interface Props {
+  onSuccess: (stickerCode: string) => void;
+}
+
+export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [loading, setLoading] = useState(false);
   
@@ -55,7 +59,6 @@ export const WalletPage: React.FC = () => {
         dbService.getStickersByPhone(userPhone),
         dbService.getWalletBalance(userPhone)
     ]);
-    // Sort stickers by date in descending order
     const sortedStickers = userStickers.sort((a, b) => new Date(b.purchasedAt).getTime() - new Date(a.purchasedAt).getTime());
     setStickers(sortedStickers);
     setWalletBalance(balance);
@@ -81,8 +84,7 @@ export const WalletPage: React.FC = () => {
       setLoading(true);
       const result = await dbService.payWithWallet(phone, sticker.id, settings.ticketPrice);
       if (result.success) {
-          await fetchUserData(phone); // Refresh data
-          setPaymentOptionsVisible(null); // Close modal
+          onSuccess(sticker.code);
       } else {
           alert(result.message);
       }
@@ -112,7 +114,6 @@ export const WalletPage: React.FC = () => {
 
   const formatMoney = (val: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
 
-  // --- LOGIN SCREEN ---
   if (!isLoggedIn) {
       return (
           <div className="flex flex-col items-center justify-center h-[60vh] px-4 space-y-6 animate-in fade-in duration-500">
