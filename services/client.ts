@@ -5,8 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 // In a real scenario, you would set these variables in your build environment.
 // For this demo, if they are empty, the app falls back to LocalStorage (Demo Mode).
 // To enable Multi-User Realtime DB: Create a Supabase project and fill these.
-const SUPABASE_URL = ''; 
-const SUPABASE_KEY = ''; 
+const SUPABASE_URL = 'https://wcwtshnxnkoaeldmcefs.supabase.co'; 
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indjd3RzaG54bmtvYWVsZG1jZWZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3NTM0NzAsImV4cCI6MjA3OTMyOTQ3MH0.I-YM7GJs-_cnkzxeCGXVcOueYvf-c-Za8u7rvJ-3DEc'; 
 
 export const isCloudEnabled = !!(SUPABASE_URL && SUPABASE_KEY);
 

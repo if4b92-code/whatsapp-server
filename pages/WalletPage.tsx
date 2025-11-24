@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { dbService } from '../services/mockDb';
+import { dbService } from '../services/db';
 import { paymentService } from '../services/paymentService';
 import { Sticker, GlobalSettings } from '../types';
 import { QRCodeCanvas } from 'qrcode.react';

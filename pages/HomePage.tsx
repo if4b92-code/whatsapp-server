@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { dbService } from '../services/mockDb';
+import { dbService } from '../services/db';
 import { GlobalSettings } from '../types';
 import { Trophy, ChevronRight, Info, Calendar, Zap, Star, Users, Crown } from 'lucide-react';
 

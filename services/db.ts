@@ -1,0 +1,208 @@
+
+import { Sticker, GlobalSettings, OwnerData } from '../types';
+import { supabase, isCloudEnabled, uuidv4 } from './client';
+
+const DEFAULT_SETTINGS: GlobalSettings = {
+  jackpotAmount: 50000000,
+  accumulatedPool: 1250000,
+  dailyPrizeAmount: 200000,
+  topBuyerPrize: 50000, 
+  ticketPrice: 5000, 
+  officialLotteryNameWeekly: "Lotería de Boyacá",
+  nextDrawDateWeekly: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  mpAccessToken: '', 
+  mpPublicKey: '', 
+  adminWhatsApp: '573001234567'
+};
+
+export const dbService = {
+  getSettings: async (): Promise<GlobalSettings> => {
+    if (!isCloudEnabled || !supabase) return DEFAULT_SETTINGS;
+
+    const { data, error } = await supabase
+      .from('settings')
+      .select('*')
+      .eq('id', 1)
+      .single();
+
+    if (error) {
+      console.error("Error fetching settings:", error);
+      return DEFAULT_SETTINGS;
+    }
+
+    return data as GlobalSettings;
+  },
+
+  updateSettings: async (newSettings: Partial<GlobalSettings>) => {
+    if (!isCloudEnabled || !supabase) return;
+
+    const { data, error } = await supabase
+      .from('settings')
+      .update(newSettings)
+      .eq('id', 1);
+
+    if (error) {
+      console.error("Error updating settings:", error);
+    }
+
+    return data;
+  },
+
+  getWalletBalance: async (phone: string): Promise<number> => {
+    if (!isCloudEnabled || !supabase) return 0;
+
+    const { data, error } = await supabase
+      .from('wallets')
+      .select('balance')
+      .eq('phone', phone)
+      .single();
+
+    if (error || !data) {
+      return 0;
+    }
+
+    return data.balance || 0;
+  },
+
+  addWalletBalance: async (phone: string, amount: number): Promise<number> => {
+    if (!isCloudEnabled || !supabase) return 0;
+
+    const { data, error } = await supabase.rpc('add_to_balance', { p_phone: phone, p_amount: amount });
+
+    if (error) {
+      console.error('Error adding to balance:', error);
+      return 0;
+    }
+
+    return data || 0;
+  },
+
+  generateUserAccessCode: async (phone: string): Promise<string> => {
+    if (!isCloudEnabled || !supabase) return ''
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const { error } = await supabase
+      .from('user_access_codes')
+      .upsert({ phone, code, created_at: new Date().toISOString() });
+
+    if (error) {
+      console.error("Error generating access code:", error);
+      return '';
+    }
+
+    return code;
+  },
+
+  validateUserAccessCode: async (phone: string, code: string): Promise<boolean> => {
+    if (!isCloudEnabled || !supabase) return false;
+
+    const { data, error } = await supabase
+      .from('user_access_codes')
+      .select('code')
+      .eq('phone', phone)
+      .single();
+
+    if (error || !data) {
+      return false;
+    }
+
+    return data.code === code;
+  },
+
+  getAllStickersGlobal: async (): Promise<Sticker[]> => {
+    if (!isCloudEnabled || !supabase) return [];
+
+    const { data, error } = await supabase
+      .from('stickers')
+      .select('*');
+
+    if (error) {
+      console.error("Error fetching stickers:", error);
+      return [];
+    }
+
+    return data as Sticker[];
+  },
+
+    getStickersByPhone: async (phoneNumber: string): Promise<Sticker[]> => {
+    if (!isCloudEnabled || !supabase) return [];
+
+    const { data, error } = await supabase
+      .from('stickers')
+      .select('*')
+      .eq('userId', phoneNumber);
+
+    if (error) {
+      console.error("Error fetching stickers:", error);
+      return [];
+    }
+
+    return data as Sticker[];
+  },
+
+  getTopBuyers: async (): Promise<{ docId: string, name: string, count: number }[]> => {
+    if (!isCloudEnabled || !supabase) return [];
+
+    const { data, error } = await supabase.rpc('get_top_buyers');
+
+    if (error) {
+      console.error('Error getting top buyers:', error);
+      return [];
+    }
+    return data || [];
+  },
+
+  createPendingTicket: async (numbers: string, ownerData: OwnerData): Promise<{ success: boolean, message: string, sticker?: Sticker }> => {
+    if (!isCloudEnabled || !supabase) return { success: false, message: "Database not connected" };
+
+    if (numbers.length !== 4 || isNaN(Number(numbers))) {
+      return { success: false, message: "Número inválido." };
+    }
+
+    const timestamp = new Date();
+    const dateStr = timestamp.toISOString().slice(0, 10).replace(/-/g, '');
+    const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const code = `GA-${dateStr}-${randomPart}`;
+    const hash = btoa(`HMAC_${code}`);
+
+    const newSticker: Partial<Sticker> = {
+      id: uuidv4(),
+      code,
+      numbers,
+      userId: ownerData.phone,
+      purchasedAt: timestamp.toISOString(),
+      status: 'pending',
+      hash,
+      ownerData: ownerData,
+    };
+
+    const { data, error } = await supabase
+      .from('stickers')
+      .insert(newSticker)
+      .select();
+
+    if (error) {
+      console.error("Error creating pending ticket:", error);
+      if (error.code === '23505') return { success: false, message: `El número ${numbers} ya está en proceso de compra o vendido.` };
+      return { success: false, message: "Error creating ticket" };
+    }
+
+    return { success: true, message: "Ticket generado", sticker: data[0] as Sticker };
+  },
+
+  approveTicketManually: async (stickerId: string) => {
+    if (!isCloudEnabled || !supabase) return false;
+
+    const { error } = await supabase
+      .from('stickers')
+      .update({ status: 'active' })
+      .eq('id', stickerId);
+
+    if (error) {
+      console.error("Error approving ticket:", error);
+      return false;
+    }
+
+    return true;
+  },
+};

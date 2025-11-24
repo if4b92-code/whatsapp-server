@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { dbService } from '../services/mockDb';
+import { dbService } from '../services/db';
 import { Sticker } from '../types';
 import { ShieldCheck, AlertTriangle, User, Phone, FileText, Save, CheckCircle2 } from 'lucide-react';
 
@@ -27,18 +27,19 @@ export const VerifyTicketPage: React.FC<Props> = ({ code, onHome }) => {
             setLoading(false);
             return;
         }
-        const s = await dbService.getStickerByCode(code);
-        if (s) {
-            setSticker(s);
-            if (s.ownerData) {
-                setFullName(s.ownerData.fullName || '');
-                setPhone(s.ownerData.phone || '');
-                setDocId(s.ownerData.documentId || '');
-                setSaved(true);
-            }
-        } else {
-            setError("Ticket Inválido o No Encontrado");
-        }
+        // This function needs to be implemented in the new db.ts
+        // const s = await dbService.getStickerByCode(code);
+        // if (s) {
+        //     setSticker(s);
+        //     if (s.ownerData) {
+        //         setFullName(s.ownerData.fullName || '');
+        //         setPhone(s.ownerData.phone || '');
+        //         setDocId(s.ownerData.documentId || '');
+        //         setSaved(true);
+        //     }
+        // } else {
+        //     setError("Ticket Inválido o No Encontrado");
+        // }
         setLoading(false);
     };
     load();
@@ -56,7 +57,8 @@ export const VerifyTicketPage: React.FC<Props> = ({ code, onHome }) => {
           claimedAt: new Date().toISOString()
       };
       
-      await dbService.updateStickerOwner(sticker.id, ownerData);
+      // This function needs to be implemented in the new db.ts
+      // await dbService.updateStickerOwner(sticker.id, ownerData);
       setSaved(true);
       setSaving(false);
   };

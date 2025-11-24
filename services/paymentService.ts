@@ -1,5 +1,5 @@
 
-import { dbService } from './mockDb';
+import { dbService } from './db';
 
 export const paymentService = {
   /**

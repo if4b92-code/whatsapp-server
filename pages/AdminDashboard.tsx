@@ -1,12 +1,14 @@
 
 import React, { useState, ChangeEvent, FormEvent } from 'react';
-import { dbService, COLOMBIAN_LOTTERIES } from '../services/mockDb';
+import { dbService } from '../services/db';
 import { Sticker, GlobalSettings } from '../types';
 import { Lock, Save, AlertTriangle, Search, Award, DollarSign, Gift, Users, Key, CheckCircle2, MessageCircle, CreditCard, Wallet, PlusCircle } from 'lucide-react';
+import { supabase } from '../services/client';
 
 export const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
   const [error, setError] = useState('');
 
   const [stickers, setStickers] = useState<Sticker[]>([]);
@@ -24,11 +26,18 @@ export const AdminDashboard: React.FC = () => {
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-    if (password === 'fer12345678') {
+    if (!supabase) return;
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setError('Acceso Denegado');
+    } else {
       setIsAuthenticated(true);
       await loadData();
-    } else {
-      setError('Acceso Denegado');
     }
   };
 
@@ -116,7 +125,7 @@ export const AdminDashboard: React.FC = () => {
           return;
       }
 
-      const totalSales = activeTickets.length * settings.ticketPrice;
+      const totalSales = activeStickers.length * settings.ticketPrice;
       const prizePool = totalSales * 0.25;
       
       const randomIndex = Math.floor(Math.random() * activeStickers.length);
@@ -158,6 +167,13 @@ export const AdminDashboard: React.FC = () => {
         </div>
         <h2 className="text-2xl font-bold text-white">Acceso Admin</h2>
         <form onSubmit={handleLogin} className="w-full space-y-4">
+          <input
+            type="email"
+            value={email}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+            placeholder="Email"
+            className="w-full bg-navy-900 border border-white/10 rounded-xl px-4 py-4 text-white focus:ring-2 focus:ring-brand-500 outline-none transition-all placeholder:text-slate-600 text-center tracking-widest"
+          />
           <input
             type="password"
             value={password}
@@ -423,12 +439,7 @@ export const AdminDashboard: React.FC = () => {
       {/* --- LOTTERIES --- */}
       {activeTab === 'lotteries' && (
           <div className="space-y-2">
-              {COLOMBIAN_LOTTERIES.map((sc) => (
-                  <div key={sc.day} className="flex items-start p-3 bg-navy-card rounded-lg border border-white/5">
-                      <div className="w-24 text-brand-400 font-bold text-sm">{sc.dayName}</div>
-                      <div className="flex-1 text-xs text-white">{sc.lotteries.join(', ')}</div>
-                  </div>
-              ))}
+             // Replace with actual data
           </div>
       )}
     </div>

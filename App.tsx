@@ -6,7 +6,7 @@ import { BuyStickerPage } from './pages/BuyStickerPage';
 import { WalletPage } from './pages/WalletPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { VerifyTicketPage } from './pages/VerifyTicketPage';
-import { dbService } from './services/mockDb';
+import { dbService } from './services/db';
 
 const App: React.FC = () => {
   // State-based routing
@@ -55,12 +55,12 @@ const App: React.FC = () => {
       window.history.replaceState({}, '', '/'); 
       
       // Execute purchase / Confirm Pending
-      dbService.confirmTicketPayment(code).then(result => {
-          if (result.success) {
+      dbService.approveTicketManually(code).then(result => {
+          if (result) {
               alert(`¡Pago Exitoso vía ${gateway}! Tu ticket ha sido activado.`);
               setCurrentView('wallet');
           } else {
-              alert("Info: " + result.message);
+              alert("Info: Error activando ticket");
               setCurrentView('wallet'); // Go to wallet anyway to see status
           }
       });
