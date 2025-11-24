@@ -60,7 +60,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
       if (phone.length < 7) return;
       setLoginError('');
       
-      let searchPhone = phone.replace(/\\D/g, '');
+      let searchPhone = phone.replace(/\D/g, '');
       if (searchPhone.length === 10) searchPhone = '57' + searchPhone;
       setPhone(searchPhone);
 
@@ -257,6 +257,12 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
             const verifyUrl = `${window.location.origin}/?view=verify&code=${sticker.code}`;
             const isPending = sticker.status === 'pending';
             const isWinner = !isPending && settings?.winningNumber && settings.winningNumber === sticker.numbers;
+            const purchasedDate = new Date(sticker.purchasedAt);
+            const isSaturday = purchasedDate.getDay() === 6;
+            let prizeAmount = 0;
+            if (isWinner && settings) {
+                prizeAmount = isSaturday ? settings.jackpotAmount : settings.dailyPrizeAmount;
+            }
 
             if (isWinner) {
                 return (
@@ -268,6 +274,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
                                 <div className="text-5xl font-mono font-black tracking-widest text-white my-3">
                                     {sticker.numbers}
                                 </div>
+                                <div className="text-2xl font-bold text-white mb-3">{formatMoney(prizeAmount)}</div>
                                 <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded text-sm font-mono font-bold text-white">{sticker.code}</span>
                             </div>
                         </div>
