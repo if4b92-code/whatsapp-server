@@ -4,7 +4,7 @@ import { dbService } from '../services/db';
 import { paymentService } from '../services/paymentService';
 import { Sticker, GlobalSettings } from '../types';
 import { QRCodeCanvas } from 'qrcode.react';
-import { Ticket, Star, Calendar, Zap, Phone, ArrowRight, Lock, Clock, Key, HelpCircle, Wallet, X } from 'lucide-react';
+import { Ticket, Star, Calendar, Zap, Phone, ArrowRight, Lock, Clock, Key, HelpCircle, Wallet, X, Trophy } from 'lucide-react';
 
 interface Props {
   onSuccess: (stickerCode: string) => void;
@@ -24,6 +24,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
   const [settings, setSettings] = useState<GlobalSettings | null>(null);
   const [walletBalance, setWalletBalance] = useState(0);
   const [paymentOptionsVisible, setPaymentOptionsVisible] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState('');
 
   useEffect(() => {
     const init = async () => {
@@ -31,6 +32,27 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
        setSettings(s);
     };
     init();
+
+    const interval = setInterval(() => {
+        const now = new Date();
+        const target = new Date(now);
+        target.setHours(21, 30, 0, 0); // 9:30 PM
+
+        if (now > target) {
+            setCountdown("El sorteo ha finalizado por hoy.");
+            return;
+        }
+
+        const diff = target.getTime() - now.getTime();
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        setCountdown(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+    }, 1000);
+
+    return () => clearInterval(interval);
+
   }, []);
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
@@ -55,13 +77,15 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
   };
 
   const fetchUserData = async (userPhone: string) => {
-    const [userStickers, balance] = await Promise.all([
+    const [userStickers, balance, settingsData] = await Promise.all([
         dbService.getStickersByPhone(userPhone),
-        dbService.getWalletBalance(userPhone)
+        dbService.getWalletBalance(userPhone),
+        dbService.getSettings(),
     ]);
     const sortedStickers = userStickers.sort((a, b) => new Date(b.purchasedAt).getTime() - new Date(a.purchasedAt).getTime());
     setStickers(sortedStickers);
     setWalletBalance(balance);
+    setSettings(settingsData);
   }
 
   const handleCodeSubmit = async (e: React.FormEvent) => {
@@ -192,6 +216,22 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
             </h2>
             <button onClick={() => { setIsLoggedIn(false); setStep('phone'); setPhone(''); setAccessCode(''); }} className="text-xs text-red-400 underline">Salir</button>
         </div>
+
+        {/* Lottery Info */}
+        <div className="bg-navy-card p-4 rounded-xl border border-white/5 space-y-3">
+            <div className="flex justify-between items-center text-sm">
+                <span className="font-bold text-slate-400">Próximo Sorteo:</span>
+                <span className="font-mono font-bold text-white">{countdown}</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+                <span className="font-bold text-slate-400">Número Ganador:</span>
+                <div className="flex items-center gap-2">
+                    <Trophy size={16} className="text-yellow-400"/>
+                    <span className="font-mono font-bold text-2xl text-yellow-400 tracking-widest">{settings?.winningNumber || '----'}</span>
+                </div>
+            </div>
+        </div>
+
 
         {/* Wallet Balance */}
         <div className="bg-gradient-to-r from-green-500/20 to-cyan-500/20 p-4 rounded-2xl flex justify-between items-center border border-white/10">

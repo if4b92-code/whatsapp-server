@@ -19,6 +19,7 @@ export const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [raffleWinner, setRaffleWinner] = useState<Sticker | null>(null);
   const [rafflePrize, setRafflePrize] = useState(0);
+  const [winningNumber, setWinningNumber] = useState('');
 
   const [userCodes, setUserCodes] = useState<Record<string, string>>({});
   const [userBalances, setUserBalances] = useState<Record<string, number>>({});
@@ -93,6 +94,16 @@ export const AdminDashboard: React.FC = () => {
         alert("Guardado correctamente");
     }
   };
+
+  const handleSetWinningNumber = async () => {
+    if (winningNumber.length === 4 && window.confirm(`¿Estás seguro de establecer ${winningNumber} como número ganador?`)) {
+        await dbService.updateSettings({ ...settings, winningNumber } as GlobalSettings);
+        alert(`Número ganador ${winningNumber} establecido.`);
+        await loadData();
+    } else {
+        alert("El número debe tener 4 dígitos.");
+    }
+};
 
   const handleWhatsAppClick = (sticker: Sticker) => {
       if (!sticker.ownerData.phone) return;
@@ -450,7 +461,28 @@ export const AdminDashboard: React.FC = () => {
       )}
 
       {activeTab === 'lotteries' && (
-          <div className="space-y-2">
+          <div className="space-y-4">
+              <div className="bg-navy-card p-4 rounded-xl border border-white/5">
+                  <h3 className="text-brand-400 font-bold uppercase text-sm flex items-center gap-2">
+                      <Award size={18} /> Ingresar Número Ganador
+                  </h3>
+                  <div className="flex gap-2 mt-4">
+                      <input 
+                          type="text" 
+                          maxLength={4}
+                          value={winningNumber}
+                          onChange={(e) => setWinningNumber(e.target.value)}
+                          className="w-full bg-navy-900 border border-navy-700 rounded-lg p-3 text-white font-mono text-lg tracking-widest text-center focus:border-brand-500 outline-none"
+                          placeholder="0000"
+                      />
+                      <button 
+                          onClick={handleSetWinningNumber}
+                          className="bg-brand-500 hover:bg-brand-400 text-navy-950 font-bold px-6 py-2 rounded-lg"
+                      >
+                          Guardar
+                      </button>
+                  </div>
+              </div>
           </div>
       )}
     </div>

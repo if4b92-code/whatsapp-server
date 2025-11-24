@@ -24,7 +24,8 @@ export interface GlobalSettings {
   accumulatedPool: number; // Extra pool
   dailyPrizeAmount: number; // Fixed daily prize
   topBuyerPrize: number; // Prize for the user with most tickets
-  
+  winningNumber?: string;
+
   // General Config
   ticketPrice: number; // Single price for the combo ticket
   officialLotteryNameWeekly: string;
