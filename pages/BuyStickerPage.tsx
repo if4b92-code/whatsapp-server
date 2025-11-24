@@ -53,9 +53,7 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack }) => {
     let randomNum = '';
     while (!uniqueFound && attempt < 10) {
         const r = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-        // This function needs to be implemented in the new db.ts
-        // const isTaken = await dbService.isNumberTaken(r);
-        const isTaken = false;
+        const isTaken = await dbService.isNumberTaken(r);
         if (!isTaken) {
             randomNum = r;
             uniqueFound = true;
@@ -77,9 +75,7 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack }) => {
       return;
     }
     setLoading(true);
-    // This function needs to be implemented in the new db.ts
-    // const isTaken = await dbService.isNumberTaken(numbers);
-    const isTaken = false;
+    const isTaken = await dbService.isNumberTaken(numbers);
     setLoading(false);
     if (isTaken) {
       setError("Número Ocupado");

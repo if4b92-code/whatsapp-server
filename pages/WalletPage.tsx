@@ -4,7 +4,7 @@ import { dbService } from '../services/db';
 import { paymentService } from '../services/paymentService';
 import { Sticker, GlobalSettings } from '../types';
 import { QRCodeCanvas } from 'qrcode.react';
-import { Ticket, Star, Calendar, Zap, Phone, ArrowRight, Lock, Clock, Key, HelpCircle } from 'lucide-react';
+import { Ticket, Star, Calendar, Zap, Phone, ArrowRight, Lock, Clock, Key, HelpCircle, Wallet, X } from 'lucide-react';
 
 export const WalletPage: React.FC = () => {
   const [stickers, setStickers] = useState<Sticker[]>([]);
@@ -18,6 +18,8 @@ export const WalletPage: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   
   const [settings, setSettings] = useState<GlobalSettings | null>(null);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [paymentOptionsVisible, setPaymentOptionsVisible] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -32,20 +34,32 @@ export const WalletPage: React.FC = () => {
       if (phone.length < 7) return;
       setLoginError('');
       
-      // Format phone
       let searchPhone = phone.replace(/\D/g, '');
       if (searchPhone.length === 10) searchPhone = '57' + searchPhone;
-      setPhone(searchPhone); // standardize
+      setPhone(searchPhone);
 
-      // Check if user exists (has tickets)
       const userStickers = await dbService.getStickersByPhone(searchPhone);
       if (userStickers.length === 0) {
-          setLoginError('No se encontraron tickets con este número.');
-          return;
+          const balance = await dbService.getWalletBalance(searchPhone);
+          if(balance === 0){
+            setLoginError('No se encontraron tickets con este número.');
+            return;
+          }
       }
 
       setStep('code');
   };
+
+  const fetchUserData = async (userPhone: string) => {
+    const [userStickers, balance] = await Promise.all([
+        dbService.getStickersByPhone(userPhone),
+        dbService.getWalletBalance(userPhone)
+    ]);
+    // Sort stickers by date in descending order
+    const sortedStickers = userStickers.sort((a, b) => new Date(b.purchasedAt).getTime() - new Date(a.purchasedAt).getTime());
+    setStickers(sortedStickers);
+    setWalletBalance(balance);
+  }
 
   const handleCodeSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
@@ -54,8 +68,7 @@ export const WalletPage: React.FC = () => {
 
       const isValid = await dbService.validateUserAccessCode(phone, accessCode);
       if (isValid) {
-          const userStickers = await dbService.getStickersByPhone(phone);
-          setStickers(userStickers);
+          await fetchUserData(phone);
           setIsLoggedIn(true);
       } else {
           setLoginError('Código incorrecto. Pídelo al administrador.');
@@ -63,10 +76,22 @@ export const WalletPage: React.FC = () => {
       setLoading(false);
   };
 
-  const handlePayPending = async (sticker: Sticker) => {
+  const handlePayWithWallet = async (sticker: Sticker) => {
+      if (!settings) return;
+      setLoading(true);
+      const result = await dbService.payWithWallet(phone, sticker.id, settings.ticketPrice);
+      if (result.success) {
+          await fetchUserData(phone); // Refresh data
+          setPaymentOptionsVisible(null); // Close modal
+      } else {
+          alert(result.message);
+      }
+      setLoading(false);
+  }
+
+  const handlePayWithMercadoPago = async (sticker: Sticker) => {
       if (!settings) return;
       try {
-          // Use Mercado Pago only
           await paymentService.createMercadoPagoPreference(settings.ticketPrice, sticker.code);
       } catch (err: any) {
           if (err.message === "MP_TOKEN_MISSING") {
@@ -84,6 +109,8 @@ export const WalletPage: React.FC = () => {
       const url = `https://wa.me/${settings.adminWhatsApp}?text=Hola, soy el usuario ${phone} y necesito mi Código de Acceso para ver mis tickets.`;
       window.open(url, '_blank');
   };
+
+  const formatMoney = (val: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
 
   // --- LOGIN SCREEN ---
   if (!isLoggedIn) {
@@ -128,8 +155,8 @@ export const WalletPage: React.FC = () => {
                         </div>
                         {loginError && <p className="text-red-400 text-xs text-center">{loginError}</p>}
                         
-                        <button className="w-full bg-brand-500 text-navy-950 font-bold py-4 rounded-xl flex items-center justify-center gap-2">
-                            ENTRAR AHORA
+                        <button disabled={loading} className="w-full bg-brand-500 text-navy-950 font-bold py-4 rounded-xl flex items-center justify-center gap-2">
+                            {loading ? <div className='w-5 h-5 border-2 border-navy-950 rounded-full border-t-transparent animate-spin'></div> : 'ENTRAR AHORA'}
                         </button>
 
                         <button 
@@ -158,20 +185,33 @@ export const WalletPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      
-      <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Ticket className="text-brand-500" /> Mis Tickets <span className="text-slate-500 text-sm font-normal">({stickers.length})</span>
-          </h2>
-          <button onClick={() => { setIsLoggedIn(false); setStep('phone'); setPhone(''); setAccessCode(''); }} className="text-xs text-red-400 underline">Salir</button>
-      </div>
+        <div className="flex justify-between items-center">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Ticket className="text-brand-500" /> Mis Tickets <span className="text-slate-500 text-sm font-normal">({stickers.length})</span>
+            </h2>
+            <button onClick={() => { setIsLoggedIn(false); setStep('phone'); setPhone(''); setAccessCode(''); }} className="text-xs text-red-400 underline">Salir</button>
+        </div>
 
-      {stickers.length === 0 ? (
-         <div className="flex flex-col items-center justify-center py-10 text-slate-500 space-y-4 bg-navy-card/50 rounded-2xl border border-white/5 border-dashed">
-            <Ticket size={40} className="opacity-50" />
-            <p className="text-sm">No tienes tickets activos.</p>
-         </div>
-      ) : (
+        {/* Wallet Balance */}
+        <div className="bg-gradient-to-r from-green-500/20 to-cyan-500/20 p-4 rounded-2xl flex justify-between items-center border border-white/10">
+            <div className="flex items-center gap-3">
+                <Wallet size={20} className="text-green-400"/>
+                <span className="text-sm font-bold text-white uppercase tracking-wider">Saldo Billetera</span>
+            </div>
+            <div className="text-2xl font-mono font-black text-white">{formatMoney(walletBalance)}</div>
+        </div>
+
+        {(stickers.length === 0 && walletBalance > 0) ? (
+             <div className="flex flex-col items-center justify-center py-10 text-slate-500 space-y-4 bg-navy-card/50 rounded-2xl border border-white/5 border-dashed">
+                <Ticket size={40} className="opacity-50" />
+                <p className="text-sm">No tienes tickets, ¡pero tienes saldo para comprar!</p>
+             </div>
+        ) : stickers.length === 0 ? (
+             <div className="flex flex-col items-center justify-center py-10 text-slate-500 space-y-4 bg-navy-card/50 rounded-2xl border border-white/5 border-dashed">
+                <Ticket size={40} className="opacity-50" />
+                <p className="text-sm">No tienes tickets activos.</p>
+             </div>
+        ) : (
           stickers.map((sticker) => {
             const verifyUrl = `${window.location.origin}/?view=verify&code=${sticker.code}`;
             const isPending = sticker.status === 'pending';
@@ -212,17 +252,30 @@ export const WalletPage: React.FC = () => {
                                 )}
                             </div>
                             
-                            <div className="bg-white p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.1)] opacity-80 flex flex-col items-center justify-center w-[80px] h-[80px]">
+                            <div className="bg-white/10 p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.1)] opacity-80 flex flex-col items-center justify-center w-[80px] h-[80px]">
                                 {isPending ? (
-                                    <button 
-                                        onClick={() => handlePayPending(sticker)}
-                                        className="w-full h-full bg-brand-500 hover:bg-brand-400 text-navy-950 font-black text-[10px] leading-tight text-center rounded flex flex-col items-center justify-center p-1"
-                                    >
-                                        PAGAR<br/>AHORA
-                                        <span className="text-[8px] mt-0.5 scale-75 opacity-70">(Mercado Pago)</span>
-                                    </button>
+                                     <div className="relative w-full h-full">
+                                        {paymentOptionsVisible === sticker.id ? (
+                                            <div className='absolute inset-0 bg-navy-800 rounded-lg p-1.5 flex flex-col gap-1.5 z-10 animate-in fade-in duration-300'>
+                                                <button onClick={() => setPaymentOptionsVisible(null)} className='absolute -top-1.5 -right-1.5 bg-red-500 rounded-full p-0.5 z-20'><X size={12}/></button>
+                                                <button 
+                                                    onClick={() => handlePayWithWallet(sticker)} 
+                                                    disabled={loading || walletBalance < (settings?.ticketPrice || 0)}
+                                                    className='w-full flex-1 bg-green-500 text-navy-950 rounded-md text-[10px] font-black disabled:bg-gray-500 disabled:opacity-50'
+                                                >CON SALDO</button>
+                                                <button onClick={() => handlePayWithMercadoPago(sticker)} className='w-full flex-1 bg-blue-500 text-white rounded-md text-[10px] font-black'>MERCADO PAGO</button>
+                                            </div>
+                                        ) : (
+                                            <button 
+                                                onClick={() => setPaymentOptionsVisible(sticker.id)}
+                                                className="w-full h-full bg-brand-500 hover:bg-brand-400 text-navy-950 font-black text-xs leading-tight text-center rounded-md flex flex-col items-center justify-center p-1"
+                                            >
+                                                PAGAR<br/>AHORA
+                                            </button>
+                                        )}
+                                     </div>
                                 ) : (
-                                    <a href={verifyUrl} target="_blank" rel="noopener noreferrer">
+                                    <a href={verifyUrl} target="_blank" rel="noopener noreferrer" className='bg-white rounded-lg'>
                                         <QRCodeCanvas 
                                             value={verifyUrl}
                                             size={70}

@@ -77,6 +77,73 @@ export const dbService = {
     return data || 0;
   },
 
+  isNumberTaken: async (numbers: string): Promise<boolean> => {
+    if (!isCloudEnabled || !supabase) return false;
+
+    const { data, error } = await supabase
+      .from('stickers')
+      .select('numbers')
+      .eq('numbers', numbers)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116: "object not found"
+      console.error("Error checking if number is taken:", error);
+      return true; // Assume taken to be safe
+    }
+
+    return data != null;
+  },
+  
+  payWithWallet: async (phone: string, stickerId: string, amount: number): Promise<{ success: boolean, message: string }> => {
+    if (!isCloudEnabled || !supabase) return { success: false, message: "Database not connected" };
+
+    // 1. Get current balance
+    const { data: walletData, error: walletError } = await supabase
+      .from('wallets')
+      .select('balance')
+      .eq('phone', phone)
+      .single();
+
+    if (walletError || !walletData) {
+      return { success: false, message: 'Billetera no encontrada.' };
+    }
+
+    if (walletData.balance < amount) {
+      return { success: false, message: 'Saldo insuficiente.' };
+    }
+
+    // 2. Deduct balance
+    const newBalance = walletData.balance - amount;
+    const { error: updateWalletError } = await supabase
+      .from('wallets')
+      .update({ balance: newBalance })
+      .eq('phone', phone);
+      
+    if (updateWalletError) {
+        // NOTE: This is not a transaction. If the next step fails, the user balance will be incorrect.
+        // An RPC function in Supabase would be a safer way to handle this.
+        console.error('Error updating wallet:', updateWalletError);
+        return { success: false, message: 'Error al actualizar billetera.' };
+    }
+
+    // 3. Activate ticket
+    const { error: updateStickerError } = await supabase
+      .from('stickers')
+      .update({ status: 'active', purchasedAt: new Date().toISOString() })
+      .eq('id', stickerId)
+      .eq('status', 'pending');
+
+    if (updateStickerError) {
+      console.error('Error activating sticker:', updateStickerError);
+      // Attempt to refund the user since the sticker activation failed.
+      await supabase.from('wallets').update({ balance: walletData.balance }).eq('phone', phone);
+      return { success: false, message: 'Error al activar el ticket. Se ha devuelto el saldo.' };
+    }
+    
+    return { success: true, message: 'Pago completado con éxito.' };
+  },
+
+
   generateUserAccessCode: async (phone: string): Promise<string> => {
     if (!isCloudEnabled || !supabase) return ''
 

@@ -47,17 +47,18 @@ export const AdminDashboard: React.FC = () => {
     const set = await dbService.getSettings();
     const buyers = await dbService.getTopBuyers();
     
-    // Ensure we get all unique phones from tickets + existing wallets
     const phones = new Set(s.map(sticker => sticker.ownerData.phone));
     
     const balances: Record<string, number> = {};
-    // Load balances for all detected users
     for (const p of Array.from(phones)) {
         const bal = await dbService.getWalletBalance(p);
         balances[p] = bal;
     }
 
-    setStickers(s);
+    // Sort stickers by date in descending order
+    const sortedStickers = s.sort((a, b) => new Date(b.purchasedAt).getTime() - new Date(a.purchasedAt).getTime());
+    
+    setStickers(sortedStickers);
     setSettings(set);
     setTopBuyers(buyers);
     setUserBalances(balances);
@@ -106,11 +107,9 @@ export const AdminDashboard: React.FC = () => {
           if(window.confirm(`¿Agregar $${amount} a la billetera de ${phone}?`)) {
               await dbService.addWalletBalance(cleanPhone, amount);
               
-              // Clear input
               setAmountToAdd(prev => ({ ...prev, [phone]: '' }));
               
               alert("Saldo agregado correctamente");
-              // Reload data to show new balance immediately
               await loadData();
           }
       }
@@ -202,7 +201,6 @@ export const AdminDashboard: React.FC = () => {
         <button onClick={() => setIsAuthenticated(false)} className="text-xs text-red-400 font-bold px-3 py-1 bg-red-500/10 rounded-lg">Salir</button>
       </div>
 
-      {/* Tabs */}
       <div className="bg-navy-900 p-1 rounded-xl flex overflow-x-auto scrollbar-hide">
         <button onClick={() => setActiveTab('sales')} className={`flex-1 min-w-[70px] py-2 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wide ${activeTab === 'sales' ? 'bg-brand-500 text-navy-950' : 'text-slate-400'}`}>Ventas</button>
         <button onClick={() => setActiveTab('users')} className={`flex-1 min-w-[70px] py-2 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wide ${activeTab === 'users' ? 'bg-brand-500 text-navy-950' : 'text-slate-400'}`}>Usuarios</button>
@@ -211,7 +209,6 @@ export const AdminDashboard: React.FC = () => {
         <button onClick={() => setActiveTab('config')} className={`flex-1 min-w-[70px] py-2 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wide ${activeTab === 'config' ? 'bg-brand-500 text-navy-950' : 'text-slate-400'}`}>Ajustes</button>
       </div>
 
-      {/* --- SALES --- */}
       {activeTab === 'sales' && (
         <div className="space-y-3">
              <div className="bg-purple-500/10 border border-purple-500/20 p-4 rounded-xl">
@@ -277,7 +274,6 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* --- USERS / WALLET --- */}
       {activeTab === 'users' && (
           <div className="space-y-4">
               <h3 className="text-brand-400 font-bold uppercase text-sm flex items-center gap-2">
@@ -300,7 +296,6 @@ export const AdminDashboard: React.FC = () => {
                           </div>
                       </div>
 
-                      {/* Add Balance Control */}
                       <div className="flex gap-2 items-center bg-navy-900 p-2 rounded-lg border border-white/5">
                           <Wallet size={14} className="text-slate-500" />
                           <input 
@@ -334,7 +329,6 @@ export const AdminDashboard: React.FC = () => {
           </div>
       )}
 
-      {/* --- TOP BUYERS --- */}
       {activeTab === 'top_buyers' && (
           <div className="space-y-4">
               {topBuyers.map((buyer, idx) => (
@@ -358,7 +352,6 @@ export const AdminDashboard: React.FC = () => {
           </div>
       )}
 
-      {/* --- CONFIG --- */}
       {activeTab === 'config' && (
         <form onSubmit={handleUpdateSettings} className="space-y-5 bg-navy-card p-5 rounded-2xl border border-white/5">
              <div className="space-y-4 border-b border-white/10 pb-6">
@@ -410,7 +403,6 @@ export const AdminDashboard: React.FC = () => {
                 </div>
             </div>
 
-            {/* --- MERCADO PAGO --- */}
             <div className="space-y-4 border-b border-white/10 pb-6">
                 <h3 className="text-blue-400 font-bold uppercase text-sm flex items-center gap-2"><CreditCard size={16}/> Mercado Pago</h3>
                 <div className="bg-blue-500/10 p-3 rounded-lg border border-blue-500/20">
@@ -436,10 +428,8 @@ export const AdminDashboard: React.FC = () => {
         </form>
       )}
 
-      {/* --- LOTTERIES --- */}
       {activeTab === 'lotteries' && (
           <div className="space-y-2">
-             // Replace with actual data
           </div>
       )}
     </div>
