@@ -60,7 +60,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
       if (phone.length < 7) return;
       setLoginError('');
       
-      let searchPhone = phone.replace(/\D/g, '');
+      let searchPhone = phone.replace(/\\D/g, '');
       if (searchPhone.length === 10) searchPhone = '57' + searchPhone;
       setPhone(searchPhone);
 
@@ -256,11 +256,29 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
           stickers.map((sticker) => {
             const verifyUrl = `${window.location.origin}/?view=verify&code=${sticker.code}`;
             const isPending = sticker.status === 'pending';
+            const isWinner = !isPending && settings?.winningNumber && settings.winningNumber === sticker.numbers;
+
+            if (isWinner) {
+                return (
+                    <div key={sticker.id} className="group relative">
+                        <div className="bg-gradient-to-br from-yellow-400 via-amber-300 to-yellow-500 rounded-2xl border-2 border-yellow-200 p-1 shadow-[0_0_25px_rgba(252,211,77,0.8)]">
+                            <div className="bg-black/20 rounded-xl p-4 flex flex-col items-center justify-center">
+                                <Trophy size={32} className="text-white mb-2" />
+                                <span className="font-black text-4xl text-white tracking-widest drop-shadow-lg">GANADOR</span>
+                                <div className="text-5xl font-mono font-black tracking-widest text-white my-3">
+                                    {sticker.numbers}
+                                </div>
+                                <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded text-sm font-mono font-bold text-white">{sticker.code}</span>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
 
             return (
                 <div key={sticker.id} className="group relative">
                     <div className={`bg-navy-card rounded-2xl border ${isPending ? 'border-yellow-500/30' : 'border-brand-500/30'} overflow-hidden shadow-lg transition-transform active:scale-[0.98]`}>
-                        <div className={`p-1 relative overflow-hidden bg-gradient-to-r ${isPending ? 'from-yellow-600 to-yellow-500' : 'from-brand-600 via-brand-500 to-brand-400'}`}>
+                        <div className={`p-1 relative overflow-hidden bg-gradient-to-r ${isPending ? 'from-yellow-600 to-yellow-500' : 'from-brand-600 via-brand-500 to-brand-400'}`}>\
                             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
                             <div className="flex justify-between items-center px-3 py-1">
                                 <span className="font-black text-[10px] uppercase tracking-widest text-navy-950 flex items-center gap-1">
