@@ -51,6 +51,7 @@ export interface AuditLog {
 
 export interface LotterySchedule {
   day: number; 
-  dayName: string;
-  lotteries: string[];
+  day_name: string;
+  lottery_name: string;
+  lottery_time: string;
 }

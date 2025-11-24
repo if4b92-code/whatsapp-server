@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
 import { paymentService } from '../services/paymentService';
-import { GlobalSettings, Sticker } from '../types';
+import { GlobalSettings, Sticker, LotterySchedule } from '../types';
 import { AlertTriangle, Dices, Delete, ShieldCheck, ArrowLeft, ArrowRight, CreditCard, User, Phone, CheckCircle, Wallet } from 'lucide-react';
 
 interface Props {
@@ -16,7 +16,8 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack }) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState<GlobalSettings | null>(null);
-  
+  const [dynamicMessage, setDynamicMessage] = useState('');
+
   // User Info Form
   const [userName, setUserName] = useState('');
   const [countryCode, setCountryCode] = useState('57');
@@ -26,10 +27,31 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack }) => {
   // Wallet
   const [userBalance, setUserBalance] = useState(0);
 
+  const formatMoney = (val: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
+
   useEffect(() => {
     const init = async () => {
         const s = await dbService.getSettings();
         setSettings(s);
+        const schedule = await dbService.getLotterySchedule();
+        
+        const today = new Date();
+        const dayOfWeek = today.getDay(); // Sunday is 0, Monday is 1, etc.
+
+        let msg = '';
+        const saturdayLottery = schedule.find(item => item.day === 6);
+
+        if (dayOfWeek === 0) { // Sunday
+            msg = `HOY JUEGA ${formatMoney(s.dailyPrizeAmount)} Y EL SÁBADO ${formatMoney(s.jackpotAmount)}`;
+        } else if (dayOfWeek === 6) { // Saturday
+            if (saturdayLottery) {
+                msg = `Juega HOY con la ${saturdayLottery.lottery_name} por ${formatMoney(s.jackpotAmount)}`;
+            }
+        } else { // Monday to Friday
+            msg = `HOY JUEGA ${formatMoney(s.dailyPrizeAmount)} Y EL SÁBADO ${formatMoney(s.jackpotAmount)}`;
+        }
+
+        setDynamicMessage(msg);
     };
     init();
   }, []);
@@ -139,8 +161,6 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack }) => {
           }
       }
   };
-
-  const formatMoney = (val: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
 
   if (!settings) return <div className="flex items-center justify-center h-full"><div className="animate-spin w-8 h-8 border-4 border-brand-500 rounded-full border-t-transparent"></div></div>;
 
@@ -283,24 +303,16 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack }) => {
   }
 
   return (
-    <div className="flex flex-col h-full justify-end pb-4 space-y-4">
+    <div className="flex flex-col h-full justify-end pb-4 space-y-4 px-4">
       <div className="flex-1 flex flex-col justify-center items-center">
-         <div className="w-full flex justify-start mb-4">
-             <button onClick={onBack} className="text-slate-500 hover:text-white">
-                 <ArrowLeft />
-             </button>
-         </div>
-         
          <div className="text-center space-y-2 mb-6">
             <h2 className="text-xl font-bold text-white">Elige tus 4 Cifras</h2>
-            <p className="text-slate-400 text-xs">
-                Juega por <span className="text-white font-bold">{formatMoney(settings.dailyPrizeAmount)}</span> HOY.
-            </p>
+            <p className="text-slate-400 text-xs uppercase" dangerouslySetInnerHTML={{ __html: dynamicMessage.replace(/(\$\d{1,3}(?:\.\d{3})*)/g, '<span class="text-amber-400 font-bold">$1</span>') }}></p>
         </div>
 
-        <div className={`w-full bg-navy-900 p-6 rounded-2xl border-2 ${error ? 'border-red-500/50' : 'border-navy-800'} flex flex-col items-center justify-center relative shadow-inner`}>
+        <div className={`w-full max-w-sm mx-auto bg-navy-900 p-6 rounded-2xl border-2 ${error ? 'border-red-500/50' : 'border-navy-800'} flex flex-col items-center justify-center relative shadow-inner`}>
             <div className="text-6xl font-mono font-bold tracking-[0.3em] text-white min-h-[4rem] z-10">
-                {loading ? <div className="animate-pulse text-white/20">....</div> : numbers.padEnd(4, '_')}
+                {loading ? <div className="animate-pulse text-white/20">----</div> : numbers.padEnd(4, '-')}
             </div>
             {error && (
                 <div className="absolute -bottom-8 left-0 right-0 flex items-center justify-center gap-1 text-red-400 text-xs font-bold animate-pulse">
@@ -310,36 +322,36 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack }) => {
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="w-full max-w-sm mx-auto">
         <button 
             onClick={handleRandom}
             disabled={loading}
-            className="flex-1 bg-navy-card hover:bg-navy-800 text-brand-400 py-3 rounded-xl font-bold text-xs uppercase tracking-wider border border-white/5 flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+            className="w-full bg-navy-700 hover:bg-navy-600 text-amber-400 py-3 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 mb-3"
         >
             <Dices size={18} /> {loading ? '...' : 'Aleatorio'}
         </button>
-      </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-          <button
-            key={num}
-            onClick={() => handleInput(num.toString())}
-            disabled={loading}
-            className="bg-navy-card hover:bg-navy-800 border-b-4 border-navy-900 active:border-b-0 active:translate-y-1 text-2xl font-bold py-4 rounded-xl transition-all text-white shadow-lg aspect-square rounded-full flex items-center justify-center border-2 border-cyan-500/30 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
-          >
-            {num}
-          </button>
-        ))}
-        <button onClick={handleDelete} className="bg-navy-900 text-red-400/80 font-bold py-4 rounded-xl flex items-center justify-center hover:text-red-400 transition-colors"><Delete size={24} /></button>
-        <button onClick={() => handleInput('0')} disabled={loading} className="bg-navy-card hover:bg-navy-800 border-b-4 border-navy-900 active:border-b-0 active:translate-y-1 text-2xl font-bold py-4 rounded-xl transition-all text-white shadow-lg aspect-square rounded-full flex items-center justify-center border-2 border-cyan-500/30 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)]">0</button>
-        <button 
-            onClick={validateAndProceed} 
-            disabled={numbers.length !== 4 || loading}
-            className={`font-bold py-4 rounded-xl flex items-center justify-center transition-all active:scale-95 ${numbers.length === 4 ? 'bg-brand-500 text-navy-950 shadow-glow' : 'bg-navy-800 text-slate-600 cursor-not-allowed'}`}
-        >
-            {loading ? <div className="animate-spin w-5 h-5 border-2 border-navy-950 border-t-transparent rounded-full"></div> : <ShieldCheck size={24} />}
-        </button>
+        <div className="grid grid-cols-3 gap-3">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+            <button
+                key={num}
+                onClick={() => handleInput(num.toString())}
+                disabled={loading}
+                className="bg-navy-700 hover:bg-navy-600 text-2xl font-bold py-4 rounded-lg transition-all text-white"
+            >
+                {num}
+            </button>
+            ))}
+            <button onClick={handleDelete} className="bg-navy-700 text-red-400/80 font-bold py-4 rounded-lg flex items-center justify-center hover:text-red-400 transition-colors"><Delete size={24} /></button>
+            <button onClick={() => handleInput('0')} disabled={loading} className="bg-navy-700 hover:bg-navy-600 text-2xl font-bold py-4 rounded-lg transition-all text-white">0</button>
+            <button 
+                onClick={validateAndProceed} 
+                disabled={numbers.length !== 4 || loading}
+                className={`font-bold py-4 rounded-lg flex items-center justify-center transition-all active:scale-95 ${numbers.length === 4 ? 'bg-green-500 text-white' : 'bg-navy-700 text-slate-600 cursor-not-allowed'}`}
+            >
+                {loading ? <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div> : <ShieldCheck size={24} />}
+            </button>
+        </div>
       </div>
     </div>
   );

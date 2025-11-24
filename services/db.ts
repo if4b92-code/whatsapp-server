@@ -1,5 +1,5 @@
 
-import { Sticker, GlobalSettings, OwnerData } from '../types';
+import { Sticker, GlobalSettings, OwnerData, LotterySchedule } from '../types';
 import { supabase, isCloudEnabled, uuidv4 } from './client';
 
 const DEFAULT_SETTINGS: GlobalSettings = {
@@ -16,6 +16,21 @@ const DEFAULT_SETTINGS: GlobalSettings = {
 };
 
 export const dbService = {
+  getLotterySchedule: async (): Promise<LotterySchedule[]> => {
+    if (!isCloudEnabled || !supabase) return [];
+
+    const { data, error } = await supabase
+      .from('lottery_schedule')
+      .select('*');
+
+    if (error) {
+      console.error("Error fetching lottery schedule:", error);
+      return [];
+    }
+
+    return data as LotterySchedule[];
+  },
+
   getSettings: async (): Promise<GlobalSettings> => {
     if (!isCloudEnabled || !supabase) return DEFAULT_SETTINGS;
 

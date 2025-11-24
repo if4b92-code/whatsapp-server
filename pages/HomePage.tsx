@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { dbService } from '../services/db';
-import { GlobalSettings } from '../types';
+import { GlobalSettings, LotterySchedule } from '../types';
 import { Trophy, ChevronRight, Info, Clover, Star, Users, Heart } from 'lucide-react';
 
 interface Props {
@@ -10,22 +10,43 @@ interface Props {
 
 export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
   const [settings, setSettings] = useState<GlobalSettings | null>(null);
+  const [dailyLottery, setDailyLottery] = useState<LotterySchedule | null>(null);
+  const [saturdayLottery, setSaturdayLottery] = useState<LotterySchedule | null>(null);
 
-  const loadData = async () => {
-      const s = await dbService.getSettings();
-      setSettings(s);
-  };
+  const formatMoney = (amount: number) => 
+    new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(amount);
 
   useEffect(() => {
+    const loadData = async () => {
+        const s = await dbService.getSettings();
+        setSettings(s);
+        
+        const schedule = await dbService.getLotterySchedule();
+        const today = new Date();
+        let dayOfWeek = today.getDay(); // Sunday is 0
+        
+        // On Sunday, we show Monday's lottery
+        if (dayOfWeek === 0) {
+            dayOfWeek = 1;
+        }
+
+        const dailyEntry = schedule.find(item => item.day === dayOfWeek);
+        if (dailyEntry) {
+            setDailyLottery(dailyEntry);
+        }
+        
+        const saturdayEntry = schedule.find(item => item.day === 6);
+        if (saturdayEntry) {
+            setSaturdayLottery(saturdayEntry);
+        }
+    };
+
     loadData();
-    const interval = setInterval(loadData, 5000); 
+    const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
   }, []);
 
   if (!settings) return <div className="flex justify-center mt-20"><div className="animate-spin w-8 h-8 border-4 border-amber-400 rounded-full border-t-transparent"></div></div>;
-
-  const formatMoney = (amount: number) => 
-    new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(amount);
 
   return (
     <div className="space-y-8">
@@ -88,7 +109,11 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
                   </div>
                   <h3 className="text-blue-200 font-bold text-sm mb-1">1. Afortudiario</h3>
                   <div className="text-2xl font-black text-white font-mono mt-auto">{formatMoney(settings.dailyPrizeAmount)}</div>
-                  <p className="text-[10px] text-slate-400 mt-2">Juega MAÑANA con <b className="text-blue-300">Dorado Tarde</b>. Tu número juega TODA la semana.</p>
+                  {dailyLottery && 
+                    <p className="text-[10px] text-slate-400 mt-2">
+                        Juega {new Date().getDay() === 0 ? 'MAÑANA' : 'HOY'} con <b className="text-blue-300">{dailyLottery.lottery_name}</b> a las {dailyLottery.lottery_time}. Tu número juega TODA la semana.
+                    </p>
+                  }
                </div>
             </div>
 
@@ -103,7 +128,7 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
                   </div>
                   <h3 className="text-amber-200 font-bold text-sm mb-1">2. Ticket de Oro</h3>
                   <div className="text-2xl font-black text-white font-mono mt-auto">{formatMoney(settings.jackpotAmount)}</div>
-                  <p className="text-[10px] text-slate-400 mt-2">Juega el Sábado con la <b className="text-amber-300">Lotería de Boyacá</b>.</p>
+                  {saturdayLottery && <p className="text-[10px] text-slate-400 mt-2">Juega el Sábado con la <b className="text-amber-300">{saturdayLottery.lottery_name}</b> a las {saturdayLottery.lottery_time}.</p>}
                </div>
             </div>
 
