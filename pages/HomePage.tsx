@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { dbService } from '../services/db';
 import { GlobalSettings } from '../types';
-import { Trophy, ChevronRight, Info, Calendar, Zap, Star, Users, Crown } from 'lucide-react';
+import { Trophy, ChevronRight, Info, Clover, Star, Users, Heart } from 'lucide-react';
 
 interface Props {
   onBuyClick: () => void;
@@ -10,12 +10,10 @@ interface Props {
 
 export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
   const [settings, setSettings] = useState<GlobalSettings | null>(null);
-  const [todayLottery, setTodayLottery] = useState<string>('');
 
   const loadData = async () => {
       const s = await dbService.getSettings();
       setSettings(s);
-      setTodayLottery(dbService.getLotteryForToday());
   };
 
   useEffect(() => {
@@ -24,132 +22,129 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
     return () => clearInterval(interval);
   }, []);
 
-  if (!settings) return <div className="flex justify-center mt-20"><div className="animate-spin w-8 h-8 border-4 border-brand-500 rounded-full border-t-transparent"></div></div>;
+  if (!settings) return <div className="flex justify-center mt-20"><div className="animate-spin w-8 h-8 border-4 border-amber-400 rounded-full border-t-transparent"></div></div>;
 
   const formatMoney = (amount: number) => 
     new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(amount);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       
       {/* --- MAIN HERO CARD --- */}
-      <div className="relative group">
-        <div className="absolute -inset-1 bg-gradient-to-b from-brand-500 to-blue-600 rounded-[24px] opacity-75 blur-lg transition duration-1000"></div>
-        <div className="relative bg-navy-900 rounded-[22px] overflow-hidden shadow-2xl">
+      <div className="relative">
+        <div className="absolute -inset-2 bg-gradient-to-t from-amber-500 to-blue-600 rounded-[30px] opacity-30 blur-xl"></div>
+        <div className="relative bg-navy-900 rounded-3xl overflow-hidden shadow-2xl border-2 border-navy-800/50">
             
-            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-brand-500/20 via-navy-900 to-navy-950"></div>
-            
-            <div className="bg-gradient-to-r from-brand-600 to-brand-500 p-2 text-center shadow-lg relative z-10">
-                <h1 className="text-navy-950 font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2">
-                    <Star size={12} fill="currentColor" />
-                    ¡4 OPORTUNIDADES DE GANAR!
-                    <Star size={12} fill="currentColor" />
+            <div className="bg-amber-400 p-2 text-center shadow-lg relative z-10">
+                <h1 className="text-slate-900 font-black uppercase tracking-wider text-xs flex items-center justify-center gap-2">
+                    <Star size={14} className="text-slate-900/50" />
+                    ¡4 OPORTUNIDADES DE APOYAR!
+                    <Star size={14} className="text-slate-900/50" />
                 </h1>
             </div>
 
             <div className="p-6 flex flex-col items-center text-center relative z-10">
                 
                 <div className="mb-6 w-full">
-                    <div className="text-[10px] text-brand-400 font-bold uppercase tracking-widest mb-1">Gran Acumulado Semanal</div>
-                    <div className="text-5xl font-black text-white tracking-tighter drop-shadow-[0_0_15px_rgba(234,179,8,0.5)] font-mono">
+                    <div className="text-[10px] text-amber-300 font-bold uppercase tracking-widest mb-1">Gran Ticket de Oro Semanal</div>
+                    <div className="text-6xl font-black text-white tracking-tighter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] font-mono">
                         {formatMoney(settings.jackpotAmount)}
                     </div>
-                    <div className="text-xs font-bold text-green-400 font-mono bg-green-500/10 px-2 py-1 rounded inline-block mt-1">
-                        + {formatMoney(settings.accumulatedPool)} Bolsa Extra
+                    <div className="text-sm font-bold text-green-300 bg-green-500/10 px-3 py-1 rounded-full inline-block mt-2 border border-green-500/20">
+                        + {formatMoney(settings.accumulatedPool)} Donación al Azar
                     </div>
                 </div>
 
                 <button 
                     onClick={onBuyClick}
-                    className="w-full bg-gradient-to-r from-brand-500 to-brand-400 hover:from-brand-400 hover:to-brand-300 text-navy-950 font-black text-lg py-4 rounded-xl shadow-[0_0_30px_rgba(234,179,8,0.3)] transition-all active:scale-95 flex items-center justify-center gap-2 group/btn relative overflow-hidden"
+                    className="w-full bg-amber-400 hover:bg-amber-300 text-slate-900 font-black text-lg py-4 rounded-xl shadow-[0_0_30px_rgba(250,204,21,0.4)] transition-all active:scale-[0.97] flex items-center justify-between px-6"
                 >
-                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300"></div>
-                    <span className="relative z-10 flex items-center gap-2">
-                        COMPRAR TICKET
-                        <span className="bg-navy-950/20 px-2 py-0.5 rounded text-xs font-mono">{formatMoney(settings.ticketPrice)}</span>
+                    <span>COMPRAR TICKET</span>
+                    <span className="flex items-center gap-2">
+                      <span className="bg-slate-900/20 px-3 py-1 rounded-md text-sm font-mono">{formatMoney(settings.ticketPrice)}</span>
+                      <ChevronRight strokeWidth={4} size={22} />
                     </span>
-                    <ChevronRight className="relative z-10 group-hover/btn:translate-x-1 transition-transform" size={20} strokeWidth={3} />
                 </button>
             </div>
         </div>
       </div>
 
       {/* --- 4 WAYS TO WIN GRID --- */}
-      <div className="space-y-3">
-          <div className="flex items-center gap-2 px-2">
-              <div className="w-1 h-4 bg-brand-500 rounded-full"></div>
-              <h2 className="text-white font-bold text-sm uppercase tracking-wider">¿Cómo Gano?</h2>
+      <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+              <div className="w-1.5 h-6 bg-amber-400 rounded-full"></div>
+              <h2 className="text-white font-bold text-xl tracking-wide">¿CÓMO GANO?</h2>
           </div>
           
-          <div className="grid grid-cols-2 gap-3">
-            {/* 1. Diario */}
-            <div className="bg-navy-card rounded-xl p-3 border border-blue-500/20 relative overflow-hidden group hover:border-blue-500/50 transition-colors">
-               <div className="absolute right-[-5px] top-[-5px] text-blue-500/10 group-hover:text-blue-500/20 transition-colors">
-                  <Calendar size={50} />
+          <div className="grid grid-cols-2 gap-4">
+            {/* 1. Afortudiario */}
+            <div className="bg-navy-card rounded-2xl p-4 border border-blue-500/30 relative overflow-hidden group hover:border-blue-400/60 transition-colors shadow-lg">
+               <div className="absolute right-[-10px] top-[-10px] text-blue-600/10 group-hover:text-blue-500/15 transition-colors group-hover:scale-110">
+                  <Clover size={64} strokeWidth={1.5} />
                </div>
-               <div className="relative z-10">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center mb-2">
-                      <Zap size={18} fill="currentColor" />
+               <div className="relative z-10 flex flex-col h-full">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-300 flex items-center justify-center mb-3">
+                      <Clover size={24} />
                   </div>
-                  <h3 className="text-blue-100 font-bold text-xs mb-0.5">1. Sorteo Diario</h3>
-                  <div className="text-lg font-black text-white font-mono">{formatMoney(settings.dailyPrizeAmount)}</div>
-                  <p className="text-[9px] text-slate-400 mt-1">Juega HOY con <b className="text-blue-300">{todayLottery}</b>.</p>
+                  <h3 className="text-blue-200 font-bold text-sm mb-1">1. Afortudiario</h3>
+                  <div className="text-2xl font-black text-white font-mono mt-auto">{formatMoney(settings.dailyPrizeAmount)}</div>
+                  <p className="text-[10px] text-slate-400 mt-2">Juega MAÑANA con <b className="text-blue-300">Dorado Tarde</b>. Tu número juega TODA la semana.</p>
                </div>
             </div>
 
-            {/* 2. Semanal */}
-            <div className="bg-navy-card rounded-xl p-3 border border-brand-500/20 relative overflow-hidden group hover:border-brand-500/50 transition-colors">
-               <div className="absolute right-[-5px] top-[-5px] text-brand-500/10 group-hover:text-brand-500/20 transition-colors">
-                  <Trophy size={50} />
+            {/* 2. Ticket de Oro */}
+            <div className="bg-navy-card rounded-2xl p-4 border border-amber-500/30 relative overflow-hidden group hover:border-amber-400/60 transition-colors shadow-lg">
+               <div className="absolute right-[-10px] top-[-10px] text-amber-600/10 group-hover:text-amber-500/15 transition-colors group-hover:scale-110">
+                  <Trophy size={64} strokeWidth={1.5}/>
                </div>
-               <div className="relative z-10">
-                  <div className="w-8 h-8 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center mb-2">
-                      <Star size={18} fill="currentColor" />
+               <div className="relative z-10 flex flex-col h-full">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center mb-3">
+                      <Star size={24} />
                   </div>
-                  <h3 className="text-brand-100 font-bold text-xs mb-0.5">2. Acumulado</h3>
-                  <div className="text-lg font-black text-white font-mono">{formatMoney(settings.jackpotAmount)}</div>
-                  <p className="text-[9px] text-slate-400 mt-1">El premio gordo de la semana.</p>
+                  <h3 className="text-amber-200 font-bold text-sm mb-1">2. Ticket de Oro</h3>
+                  <div className="text-2xl font-black text-white font-mono mt-auto">{formatMoney(settings.jackpotAmount)}</div>
+                  <p className="text-[10px] text-slate-400 mt-2">Juega el Sábado con la <b className="text-amber-300">Lotería de Boyacá</b>.</p>
                </div>
             </div>
 
-            {/* 3. Interno */}
-            <div className="bg-navy-card rounded-xl p-3 border border-purple-500/20 relative overflow-hidden group hover:border-purple-500/50 transition-colors">
-               <div className="absolute right-[-5px] top-[-5px] text-purple-500/10 group-hover:text-purple-500/20 transition-colors">
-                  <Users size={50} />
+            {/* 3. El Elegido */}
+            <div className="bg-navy-card rounded-2xl p-4 border border-purple-500/30 relative overflow-hidden group hover:border-purple-400/60 transition-colors shadow-lg">
+               <div className="absolute right-[-10px] top-[-10px] text-purple-600/10 group-hover:text-purple-500/15 transition-colors group-hover:scale-110">
+                  <Users size={64} strokeWidth={1.5} />
                </div>
-               <div className="relative z-10">
-                  <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center mb-2">
-                      <Users size={18} />
+               <div className="relative z-10 flex flex-col h-full">
+                  <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center mb-3">
+                      <Users size={24} />
                   </div>
-                  <h3 className="text-purple-100 font-bold text-xs mb-0.5">3. ¡Ganador Garantizado!</h3>
-                  <div className="text-lg font-black text-white font-mono">Sorteo Exclusivo</div>
-                  <p className="text-[9px] text-slate-400 mt-1">¡Alguien gana sí o sí cada semana!</p>
+                  <h3 className="text-purple-200 font-bold text-sm mb-1">3. El Elegido</h3>
+                  <div className="text-xl font-black text-white leading-tight mt-auto">¡GANADOR<br/>GARANTIZADO!</div>
+                  <p className="text-[10px] text-slate-400 mt-2">¡Todos los días un ganador! Oportunidad de ganar aún si no coincide tu número.</p>
                </div>
             </div>
 
-            {/* 4. Ranking */}
-            <div className="bg-navy-card rounded-xl p-3 border border-red-500/20 relative overflow-hidden group hover:border-red-500/50 transition-colors">
-               <div className="absolute right-[-5px] top-[-5px] text-red-500/10 group-hover:text-red-500/20 transition-colors">
-                  <Crown size={50} />
+            {/* 4. Donación al Azar */}
+            <div className="bg-green-900/50 rounded-2xl p-4 border-2 border-green-500/60 relative overflow-hidden group hover:border-green-400/80 transition-colors shadow-lg">
+               <div className="absolute right-[-10px] top-[-10px] text-green-600/10 group-hover:text-green-500/15 transition-colors group-hover:scale-110">
+                  <Heart size={64} strokeWidth={1.5} />
                </div>
-               <div className="relative z-10">
-                  <div className="w-8 h-8 rounded-lg bg-red-500/20 text-red-400 flex items-center justify-center mb-2">
-                      <Crown size={18} />
+               <div className="relative z-10 flex flex-col h-full">
+                  <div className="w-10 h-10 rounded-xl bg-green-500/20 text-green-300 flex items-center justify-center mb-3">
+                      <Heart size={24} />
                   </div>
-                  <h3 className="text-red-100 font-bold text-xs mb-0.5">4. Recompensa Líder</h3>
-                  <div className="text-lg font-black text-white font-mono">{formatMoney(settings.topBuyerPrize || 50000)}</div>
-                  <p className="text-[9px] text-slate-400 mt-1">Premio automático al #1 del Ranking.</p>
+                  <h3 className="text-green-200 font-bold text-sm mb-1">4. Donación al Azar</h3>
+                  <div className="text-2xl font-black text-white font-mono mt-auto">{formatMoney(settings.accumulatedPool)}</div>
+                  <p className="text-[10px] text-slate-300 mt-2">APOYO PARA EMPRENDEDORES. Tus donaciones impulsan sueños.</p>
                </div>
             </div>
           </div>
       </div>
 
       {/* Footer Legal */}
-      <div className="flex gap-2 items-start p-3 bg-navy-900/50 rounded-xl border border-white/5">
-        <Info size={16} className="text-slate-500 shrink-0 mt-0.5" />
-        <p className="text-[10px] text-slate-500 leading-relaxed text-justify">
-          GanarApp - Un solo ticket te da acceso a todo: Premio Diario, Gran Acumulado, Sorteo Garantizado y Recompensa al Líder del Ranking. ¡Mucha suerte! 
-          <br/><span className="opacity-50 text-[9px]">Aplican Términos y Condiciones.</span>
+      <div className="flex gap-3 items-start p-4 bg-navy-900/50 rounded-2xl border border-white/10">
+        <Info size={24} className="text-slate-500 shrink-0 mt-0.5" />
+        <p className="text-xs text-slate-400 leading-relaxed">
+          <b>GanarApp</b> - Un solo ticket te da acceso a todo: Afortudiario, Ticket de Oro, El Elegido y Donación al Azar. ¡Mucha suerte! 
+          <br/><a href="#" className="opacity-60 text-[10px] underline hover:opacity-100">Aplican Términos y Condiciones.</a>
         </p>
       </div>
     </div>
