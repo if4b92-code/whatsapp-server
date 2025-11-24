@@ -56,24 +56,28 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
   }, []);
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (phone.length < 7) return;
-      setLoginError('');
-      
-      let searchPhone = phone.replace(/\D/g, '');
-      if (searchPhone.length === 10) searchPhone = '57' + searchPhone;
-      setPhone(searchPhone);
+    e.preventDefault();
+    if (phone.length < 7) return;
+    setLoginError('');
+    setLoading(true);
 
-      const userStickers = await dbService.getStickersByPhone(searchPhone);
-      if (userStickers.length === 0) {
-          const balance = await dbService.getWalletBalance(searchPhone);
-          if(balance === 0){
-            setLoginError('No se encontraron tickets con este número.');
-            return;
-          }
-      }
+    let searchPhone = phone.replace(/\D/g, '');
+    if (searchPhone.length === 10) searchPhone = '57' + searchPhone;
+    setPhone(searchPhone);
 
-      setStep('code');
+    const [userStickers, balance] = await Promise.all([
+        dbService.getStickersByPhone(searchPhone),
+        dbService.getWalletBalance(searchPhone)
+    ]);
+
+    if (userStickers.length === 0 && balance === 0) {
+        setLoginError('No tienes tickets ni saldo en tu billetera.');
+        setLoading(false);
+        return;
+    }
+
+    setStep('code');
+    setLoading(false);
   };
 
   const fetchUserData = async (userPhone: string) => {
@@ -162,8 +166,8 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
                             />
                         </div>
                         {loginError && <p className="text-red-400 text-xs text-center">{loginError}</p>}
-                        <button className="w-full bg-brand-500 text-navy-950 font-bold py-4 rounded-xl flex items-center justify-center gap-2">
-                            CONTINUAR <ArrowRight size={18}/>
+                        <button disabled={loading} className="w-full bg-brand-500 text-navy-950 font-bold py-4 rounded-xl flex items-center justify-center gap-2">
+                             {loading ? <div className='w-5 h-5 border-2 border-navy-950 rounded-full border-t-transparent animate-spin'></div> : <>CONTINUAR <ArrowRight size={18}/></>}
                         </button>
                    </form>
                ) : (

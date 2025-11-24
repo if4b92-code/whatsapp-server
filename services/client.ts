@@ -2,13 +2,17 @@
 import { createClient } from '@supabase/supabase-js';
 
 // --- CONFIGURATION ---
-// In a real scenario, you would set these variables in your build environment.
-// For this demo, if they are empty, the app falls back to LocalStorage (Demo Mode).
-// To enable Multi-User Realtime DB: Create a Supabase project and fill these.
-const SUPABASE_URL = 'https://wcwtshnxnkoaeldmcefs.supabase.co'; 
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indjd3RzaG54bmtvYWVsZG1jZWZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3NTM0NzAsImV4cCI6MjA3OTMyOTQ3MH0.I-YM7GJs-_cnkzxeCGXVcOueYvf-c-Za8u7rvJ-3DEc'; 
+// These variables are now loaded from your hosting environment.
+// This is more secure and allows you to use different keys for development and production.
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY; 
 
 export const isCloudEnabled = !!(SUPABASE_URL && SUPABASE_KEY);
+
+if (!isCloudEnabled) {
+  console.warn("Supabase credentials are not set. Application may not function correctly.");
+  console.warn("Please provide VITE_SUPABASE_URL and VITE_SUPABASE_KEY in your environment variables.");
+}
 
 export const supabase = isCloudEnabled 
   ? createClient(SUPABASE_URL, SUPABASE_KEY) 
