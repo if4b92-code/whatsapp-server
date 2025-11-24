@@ -1,0 +1,79 @@
+
+<!DOCTYPE html>
+<html lang="es" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#020617" />
+    <title>GanarApp | Tu Oportunidad Diaria</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                400: '#FACC15', // Bright Gold
+                500: '#EAB308', // Standard Gold
+                600: '#CA8A04', // Dark Gold
+                glow: 'rgba(234, 179, 8, 0.5)'
+              },
+              navy: {
+                800: '#1e293b',
+                900: '#0f172a',
+                950: '#020617', // Deepest background
+                card: '#161f32', // Lighter card bg
+                hover: '#1e293b',
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'], // Better for numbers
+            },
+            boxShadow: {
+              'glow': '0 0 20px rgba(234, 179, 8, 0.15)',
+              'glow-strong': '0 0 25px rgba(234, 179, 8, 0.4)',
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+      body { 
+        font-family: 'Inter', sans-serif; 
+        background-color: #020617; 
+        color: #e2e8f0; 
+        -webkit-tap-highlight-color: transparent;
+      }
+      /* Hide scrollbar for mobile-app feel */
+      ::-webkit-scrollbar { width: 0px; background: transparent; }
+      
+      /* Utility for glass effect */
+      .glass {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "qrcode.react": "https://aistudiocdn.com/qrcode.react@^4.2.0",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.39.8"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "name": "GanarApp",
+  "description": "Plataforma premium de sorteos promocionales y stickers digitales.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
