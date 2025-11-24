@@ -1,5 +1,5 @@
 
-import { Sticker, GlobalSettings, OwnerData, LotterySchedule } from '../types';
+import { Sticker, GlobalSettings, OwnerData, LotterySchedule, LotteryResult } from '../types';
 import { supabase, isCloudEnabled, uuidv4 } from './client';
 
 const DEFAULT_SETTINGS: GlobalSettings = {
@@ -16,6 +16,64 @@ const DEFAULT_SETTINGS: GlobalSettings = {
 };
 
 export const dbService = {
+  addLotteryResult: async (result: LotteryResult): Promise<LotteryResult | null> => {
+    if (!isCloudEnabled || !supabase) return null;
+
+    // Manually map from JS camelCase to DB snake_case before inserting
+    const dbPayload = {
+      drawn_at: result.drawnAt,
+      winning_number: result.winningNumber,
+      prize_amount: result.prizeAmount,
+      winner_info: result.winnerInfo,
+    };
+
+    const { data, error } = await supabase
+      .from('lottery_results')
+      .insert(dbPayload)
+      .select();
+
+    if (error) {
+      console.error("Error adding lottery result:", error);
+      return null;
+    }
+    if (!data || data.length === 0) {
+        return null;
+    }
+
+    const returnedData = data[0];
+    // Map back from snake_case to camelCase for the app to use
+    return {
+        id: returnedData.id,
+        drawnAt: returnedData.drawn_at,
+        winningNumber: returnedData.winning_number,
+        prizeAmount: returnedData.prize_amount,
+        winnerInfo: returnedData.winner_info,
+    } as LotteryResult;
+  },
+
+  getLotteryHistory: async (): Promise<LotteryResult[]> => {
+    if (!isCloudEnabled || !supabase) return [];
+
+    const { data, error } = await supabase
+      .from('lottery_results')
+      .select('*')
+      .order('drawn_at', { ascending: false }); // Use snake_case for ordering
+
+    if (error) {
+      console.error("Error fetching lottery history:", error);
+      return [];
+    }
+
+    // Map results from snake_case to camelCase for the app to use
+    return (data || []).map(item => ({
+        id: item.id,
+        drawnAt: item.drawn_at,
+        winningNumber: item.winning_number,
+        prizeAmount: item.prize_amount,
+        winnerInfo: item.winner_info,
+    })) as LotteryResult[];
+  },
+
   getLotterySchedule: async (): Promise<LotterySchedule[]> => {
     if (!isCloudEnabled || !supabase) return [];
 

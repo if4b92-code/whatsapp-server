@@ -56,3 +56,15 @@ export interface LotterySchedule {
   lottery_name: string;
   lottery_time: string;
 }
+
+export interface LotteryResult {
+    id?: string;
+    drawnAt: string;
+    winningNumber: string;
+    winnerInfo?: {
+        name: string;
+        phone: string;
+        ticketNumber: string;
+    };
+    prizeAmount: number;
+}
