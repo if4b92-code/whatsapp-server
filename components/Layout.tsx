@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Home, Ticket, ShieldCheck, Dices } from 'lucide-react';
 
 interface LayoutProps {
@@ -9,7 +9,25 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView }) => {
-  
+  const [showAdmin, setShowAdmin] = useState(false);
+
+  useEffect(() => {
+    let sequence = "";
+    const handleKeyDown = (e: KeyboardEvent) => {
+        sequence += e.key;
+        if (sequence.length > 4) {
+            sequence = sequence.substring(sequence.length - 4);
+        }
+        if (sequence.toLowerCase() === 'amor') {
+            setShowAdmin(true);
+        }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   const navItems = [
     { id: 'home', icon: Home, label: 'Lobby' },
     { id: 'buy', icon: Dices, label: 'Jugar' },
@@ -45,6 +63,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, setView }
       <nav className="fixed bottom-6 left-4 right-4 z-50">
         <div className="glass rounded-2xl border border-white/10 shadow-2xl h-16 flex items-center justify-around px-2">
           {navItems.map((item) => {
+            if (item.id === 'admin' && !showAdmin) {
+                return null;
+            }
             const isActive = currentView === item.id;
             const Icon = item.icon;
             return (

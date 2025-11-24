@@ -1,5 +1,5 @@
 
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { dbService } from '../services/db';
 import { Sticker, GlobalSettings } from '../types';
 import { Lock, Save, AlertTriangle, Search, Award, DollarSign, Gift, Users, Key, CheckCircle2, MessageCircle, CreditCard, Wallet, PlusCircle } from 'lucide-react';
@@ -22,7 +22,28 @@ export const AdminDashboard: React.FC = () => {
 
   const [userCodes, setUserCodes] = useState<Record<string, string>>({});
   const [userBalances, setUserBalances] = useState<Record<string, number>>({});
-  const [amountToAdd, setAmountToAdd] = useState<Record<string, string>>({}); // Per user input
+    const [amountToAdd, setAmountToAdd] = useState<Record<string, string>>({}); 
+    const [showShield, setShowShield] = useState(false);
+    const [userInput, setUserInput] = useState('');
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            setUserInput(prev => {
+                const newUserInput = prev + e.key;
+                if (newUserInput === 'amor') {
+                    setShowShield(true);
+                    return newUserInput;
+                }
+                return newUserInput.length > 4 ? e.key : newUserInput;
+            });
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, []);
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
@@ -161,7 +182,7 @@ export const AdminDashboard: React.FC = () => {
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] space-y-6 px-6">
-        <div className="w-20 h-20 rounded-2xl bg-navy-card border border-white/10 flex items-center justify-center shadow-glow">
+       <div className={`w-20 h-20 rounded-2xl bg-navy-card border border-white/10 flex items-center justify-center shadow-glow ${showShield ? '' : 'hidden'}`}>
             <Lock className="text-brand-500" size={32} />
         </div>
         <h2 className="text-2xl font-bold text-white">Acceso Admin</h2>
