@@ -2,7 +2,7 @@
 import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { dbService } from '../services/db';
 import { Sticker, GlobalSettings } from '../types';
-import { Lock, Save, AlertTriangle, Search, Award, DollarSign, Gift, Users, Key, CheckCircle2, MessageCircle, CreditCard, Wallet, PlusCircle } from 'lucide-react';
+import { Lock, Save, AlertTriangle, Search, Award, DollarSign, Gift, Users, Key, CheckCircle2, MessageCircle, CreditCard, Wallet, PlusCircle, Trophy } from 'lucide-react';
 import { supabase } from '../services/client';
 
 export const AdminDashboard: React.FC = () => {
@@ -20,6 +20,8 @@ export const AdminDashboard: React.FC = () => {
   const [raffleWinner, setRaffleWinner] = useState<Sticker | null>(null);
   const [rafflePrize, setRafflePrize] = useState(0);
   const [winningNumber, setWinningNumber] = useState('');
+  const [lotteryWinner, setLotteryWinner] = useState<Sticker | null>(null);
+
 
   const [userCodes, setUserCodes] = useState<Record<string, string>>({});
   const [userBalances, setUserBalances] = useState<Record<string, number>>({});
@@ -77,7 +79,6 @@ export const AdminDashboard: React.FC = () => {
         balances[p] = bal;
     }
 
-    // Sort stickers by date in descending order
     const sortedStickers = s.sort((a, b) => new Date(b.purchasedAt).getTime() - new Date(a.purchasedAt).getTime());
     
     setStickers(sortedStickers);
@@ -96,14 +97,35 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const handleSetWinningNumber = async () => {
+    setLotteryWinner(null); 
     if (winningNumber.length === 4 && window.confirm(`¿Estás seguro de establecer ${winningNumber} como número ganador?`)) {
         await dbService.updateSettings({ ...settings, winningNumber } as GlobalSettings);
-        alert(`Número ganador ${winningNumber} establecido.`);
+        
+        const winner = stickers.find(s => s.numbers === winningNumber && s.status === 'active');
+        if (winner) {
+            setLotteryWinner(winner);
+        } else {
+            alert("No se encontró un ticket ganador activo para este número.");
+        }
+        
         await loadData();
+        alert(`Número ganador ${winningNumber} establecido.`);
+
     } else {
         alert("El número debe tener 4 dígitos.");
     }
 };
+
+const handleNotifyWinner = () => {
+    if (!lotteryWinner || !lotteryWinner.ownerData.phone) return;
+
+    const cleanPhone = lotteryWinner.ownerData.phone.replace(/\+/g, '');
+    const message = `¡Felicidades ${lotteryWinner.ownerData.fullName}! Has ganado el sorteo de GanarApp con el número ${lotteryWinner.numbers}. ¡Contáctanos para reclamar tu premio!`;
+    
+    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+}
+
 
   const handleWhatsAppClick = (sticker: Sticker) => {
       if (!sticker.ownerData.phone) return;
@@ -123,7 +145,7 @@ export const AdminDashboard: React.FC = () => {
           const success = await dbService.approveTicketManually(sticker.id);
           if (success) {
               alert("✅ Ticket marcado como PAGADO.");
-              await loadData(); // Refresh data immediately
+              await loadData(); 
           } else {
               alert("❌ Error al actualizar ticket.");
           }
@@ -460,31 +482,50 @@ export const AdminDashboard: React.FC = () => {
         </form>
       )}
 
-      {activeTab === 'lotteries' && (
-          <div className="space-y-4">
-              <div className="bg-navy-card p-4 rounded-xl border border-white/5">
-                  <h3 className="text-brand-400 font-bold uppercase text-sm flex items-center gap-2">
-                      <Award size={18} /> Ingresar Número Ganador
-                  </h3>
-                  <div className="flex gap-2 mt-4">
-                      <input 
-                          type="text" 
-                          maxLength={4}
-                          value={winningNumber}
-                          onChange={(e) => setWinningNumber(e.target.value)}
-                          className="w-full bg-navy-900 border border-navy-700 rounded-lg p-3 text-white font-mono text-lg tracking-widest text-center focus:border-brand-500 outline-none"
-                          placeholder="0000"
-                      />
-                      <button 
-                          onClick={handleSetWinningNumber}
-                          className="bg-brand-500 hover:bg-brand-400 text-navy-950 font-bold px-6 py-2 rounded-lg"
-                      >
-                          Guardar
-                      </button>
-                  </div>
-              </div>
-          </div>
-      )}
+    {activeTab === 'lotteries' && (
+        <div className="space-y-4">
+            <div className="bg-navy-card p-4 rounded-xl border border-white/5">
+                <h3 className="text-brand-400 font-bold uppercase text-sm flex items-center gap-2">
+                    <Award size={18} /> Ingresar Número Ganador
+                </h3>
+                <div className="flex gap-2 mt-4">
+                    <input 
+                        type="text" 
+                        maxLength={4}
+                        value={winningNumber}
+                        onChange={(e) => setWinningNumber(e.target.value)}
+                        className="w-full bg-navy-900 border border-navy-700 rounded-lg p-3 text-white font-mono text-lg tracking-widest text-center focus:border-brand-500 outline-none"
+                        placeholder="0000"
+                    />
+                    <button 
+                        onClick={handleSetWinningNumber}
+                        className="bg-brand-500 hover:bg-brand-400 text-navy-950 font-bold px-6 py-2 rounded-lg"
+                    >
+                        Guardar
+                    </button>
+                </div>
+            </div>
+
+            {lotteryWinner && (
+                <div className="bg-green-500/10 border border-green-500/30 p-4 rounded-xl animate-in fade-in duration-500">
+                    <h3 className="text-green-400 font-bold uppercase text-sm flex items-center gap-2">
+                        <Trophy size={18} /> ¡Ticket Ganador Encontrado!
+                    </h3>
+                    <div className="mt-3 bg-navy-900/50 p-3 rounded-lg">
+                        <p className="text-sm text-slate-300">Número: <span className="font-bold text-white tracking-widest">{lotteryWinner.numbers}</span></p>
+                        <p className="text-sm text-slate-300">Ganador: <span className="font-bold text-white">{lotteryWinner.ownerData.fullName}</span></p>
+                        <p className="text-sm text-slate-300">Teléfono: <span className="font-bold text-white">{lotteryWinner.ownerData.phone}</span></p>
+                    </div>
+                    <button
+                        onClick={handleNotifyWinner}
+                        className="mt-4 w-full bg-green-500 hover:bg-green-400 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2"
+                    >
+                        <MessageCircle size={16} /> Notificar Ganador por WhatsApp
+                    </button>
+                </div>
+            )}
+        </div>
+    )}
     </div>
   );
 };
