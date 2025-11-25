@@ -79,6 +79,9 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
               <p className="text-sm text-slate-400 pl-8">
                 ¡Participa por la <strong>{settings.superchargePrizeName}</strong> y más!
               </p>
+              <p className="text-xs text-amber-400/80 font-semibold pl-8 mt-1">
+                (Juega el Sábado con el Acumulado)
+              </p>
             </div>
             <div className={`w-14 h-8 rounded-full flex items-center p-1 transition-colors ${isSuperchargeActive ? 'bg-amber-400' : 'bg-navy-700'}`}>
               <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${isSuperchargeActive ? 'translate-x-6' : 'translate-x-0'}`}/>

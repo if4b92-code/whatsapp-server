@@ -243,7 +243,7 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
                     {numbers}
                 </div>
                 <p className="text-slate-400 text-sm">Valor a pagar: <span className="text-white font-bold">{formatMoney(ticketPrice)}</span></p>
-                {isSupercharged && <p className='text-xs text-amber-400 font-bold'>¡TICKET POTENCIADO!</p>}
+                {isSupercharged && <p className='text-xs text-amber-400 font-bold'>¡TICKET POTENCIADO! Juega el Sábado.</p>}
             </div>
 
             <div className="space-y-4 flex-1">
@@ -304,28 +304,35 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
                 <h2 className="text-xl font-bold text-white">Elige tus 4 Cifras</h2>
                 <p className="text-slate-400 text-xs uppercase" dangerouslySetInnerHTML={{ __html: dynamicMessage.replace(/(\$\d{1,3}(?:\.\d{3})*)/g, '<span class="font-bold text-white">$1</span>') }}></p>
                  {isSupercharged && settings?.superchargePrizeName && (
-                    <p className="text-amber-400 font-bold text-xs uppercase animate-pulse">
-                        Y JUEGA TAMBIÉN POR {settings.superchargePrizeName}
-                    </p>
+                    <div className="text-center">
+                        <p className="text-amber-400 font-bold text-xs uppercase animate-pulse">
+                            Y JUEGA TAMBIÉN POR {settings.superchargePrizeName}
+                        </p>
+                        <p className="text-slate-400 font-bold text-[10px] uppercase">
+                           (Juega el Sábado con el Acumulado)
+                        </p>
+                    </div>
                 )}
             </div>
 
             {settings.superchargeMultiplier > 1 && (
-                <button 
-                    onClick={() => setIsSupercharged(!isSupercharged)}
-                    className={`w-full max-w-sm mx-auto rounded-lg transition-all active:scale-95 disabled:opacity-50 mb-4 overflow-hidden ${isSupercharged ? 'bg-amber-400 text-navy-950' : 'bg-navy-800 text-amber-400'}`}
-                >
-                    <div className="flex items-center justify-between p-3">
-                        <Zap size={24} className="-ml-1" />
-                        <div className="text-center">
-                            <span className="font-bold uppercase tracking-wider block">Potenciado</span>
-                            <span className="font-black text-xl">x{settings.superchargeMultiplier}</span>
+                <div className={`w-full max-w-sm mx-auto rounded-lg transition-all mb-4 overflow-hidden relative`}>
+                    <button 
+                        onClick={() => setIsSupercharged(!isSupercharged)}
+                        className={`w-full transition-all active:scale-95 disabled:opacity-50 ${isSupercharged ? 'bg-amber-400 text-navy-950' : 'bg-navy-800 text-amber-400'}`}
+                    >
+                        <div className="flex items-center justify-between p-3">
+                            <Zap size={24} className="-ml-1" />
+                            <div className="text-center">
+                                <span className="font-bold uppercase tracking-wider block">Potenciado</span>
+                                <span className="font-black text-xl">x{settings.superchargeMultiplier}</span>
+                            </div>
+                            {settings.superchargePrizeImage && (
+                                <img src={settings.superchargePrizeImage} alt="Premio Potenciado" className="w-24 h-auto rounded-md" />
+                            )}
                         </div>
-                        {settings.superchargePrizeImage && (
-                            <img src={settings.superchargePrizeImage} alt="Premio Potenciado" className="w-24 h-auto rounded-md" />
-                        )}
-                    </div>
-                </button>
+                    </button>
+                </div>
             )}
 
             <div className={`w-full max-w-sm mx-auto flex flex-col items-center justify-center relative mb-4`}>

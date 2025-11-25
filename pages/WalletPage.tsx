@@ -366,11 +366,16 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
                         </div>
                     </div>
                     {sticker.isSupercharged === true && settings?.superchargePrizeImage && (
-                        <img 
-                            src={settings.superchargePrizeImage} 
-                            alt="Potenciado" 
-                            className="absolute -top-5 -right-5 w-24 h-auto transform rotate-[15deg] drop-shadow-lg pointer-events-none"
-                        />
+                        <div className="absolute -top-5 -right-5 w-24 transform rotate-[15deg] pointer-events-none flex flex-col items-center">
+                             <img 
+                                src={settings.superchargePrizeImage} 
+                                alt="Potenciado" 
+                                className="w-full h-auto drop-shadow-lg"
+                            />
+                            <p className="text-[10px] font-bold text-navy-950 bg-amber-400 px-2 py-0.5 rounded-md -mt-2 shadow-lg">
+                                JUEGA EL SÁBADO
+                            </p>
+                        </div>
                     )}
                 </div>
             );
