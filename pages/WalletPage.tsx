@@ -2,16 +2,18 @@
 import React, { useEffect, useState } from 'react';
 import { dbService } from '../services/db';
 import { paymentService } from '../services/paymentService';
-import { Sticker, GlobalSettings } from '../types';
-import { QRCodeCanvas } from 'qrcode.react';
-import { Ticket, Star, Calendar, Zap, Phone, ArrowRight, Lock, Clock, Key, HelpCircle, Wallet, X, Trophy } from 'lucide-react';
+import { Sticker as StickerType, GlobalSettings } from '../types';
+import { Ticket } from 'lucide-react';
+import { Login } from '../components/Login';
+import { WalletHeader } from '../components/WalletHeader';
+import { Sticker } from '../components/Sticker';
 
 interface Props {
   onSuccess: (stickerCode: string) => void;
 }
 
 export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
-  const [stickers, setStickers] = useState<Sticker[]>([]);
+  const [stickers, setStickers] = useState<StickerType[]>([]);
   const [loading, setLoading] = useState(false);
   
   const [step, setStep] = useState<'phone' | 'code'>('phone');
@@ -22,7 +24,6 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
   
   const [settings, setSettings] = useState<GlobalSettings | null>(null);
   const [walletBalance, setWalletBalance] = useState(0);
-  const [paymentOptionsVisible, setPaymentOptionsVisible] = useState<string | null>(null);
   const [countdown, setCountdown] = useState('');
 
   useEffect(() => {
@@ -103,7 +104,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
       setLoading(false);
   };
 
-  const handlePayWithWallet = async (sticker: Sticker) => {
+  const handlePayWithWallet = async (sticker: StickerType) => {
       if (!settings) return;
       const price = sticker.price || settings.ticketPrice;
       setLoading(true);
@@ -116,7 +117,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
       setLoading(false);
   }
 
-  const handlePayWithMercadoPago = async (sticker: Sticker) => {
+  const handlePayWithMercadoPago = async (sticker: StickerType) => {
       if (!settings) return;
       const price = sticker.price || settings.ticketPrice;
       try {
@@ -142,67 +143,20 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
 
   if (!isLoggedIn) {
       return (
-          <div className="flex flex-col items-center justify-center h-[60vh] px-4 space-y-6 animate-in fade-in duration-500">
-               <div className="w-20 h-20 rounded-2xl bg-navy-card border border-white/10 flex items-center justify-center shadow-glow">
-                    <Lock className="text-brand-500" size={32} />
-               </div>
-               <div className="text-center">
-                   <h2 className="text-2xl font-bold text-white">Mis Tickets</h2>
-                   <p className="text-slate-400 text-sm">Acceso seguro a tu bóveda personal.</p>
-               </div>
-               
-               {step === 'phone' ? (
-                   <form onSubmit={handlePhoneSubmit} className="w-full space-y-4">
-                        <div className="relative">
-                            <Phone size={18} className="absolute left-3 top-3.5 text-slate-500" />
-                            <input 
-                                type="tel" 
-                                value={phone}
-                                onChange={e => setPhone(e.target.value)}
-                                placeholder="Número de WhatsApp"
-                                className="w-full bg-navy-900 border border-white/10 rounded-xl py-3 pl-10 text-white text-center text-lg focus:border-brand-500 outline-none"
-                            />
-                        </div>
-                        {loginError && <p className="text-red-400 text-xs text-center">{loginError}</p>}
-                        <button disabled={loading} className="w-full bg-brand-500 text-navy-950 font-bold py-4 rounded-xl flex items-center justify-center gap-2">
-                             {loading ? <div className='w-5 h-5 border-2 border-navy-950 rounded-full border-t-transparent animate-spin'></div> : <>CONTINUAR <ArrowRight size={18}/></>}
-                        </button>
-                   </form>
-               ) : (
-                   <form onSubmit={handleCodeSubmit} className="w-full space-y-4">
-                        <div className="relative">
-                            <Key size={18} className="absolute left-3 top-3.5 text-slate-500" />
-                            <input 
-                                type="text" 
-                                value={accessCode}
-                                onChange={e => setAccessCode(e.target.value)}
-                                placeholder="Código de Acceso (6 dígitos)"
-                                className="w-full bg-navy-900 border border-white/10 rounded-xl py-3 pl-10 text-white text-center text-lg focus:border-brand-500 outline-none tracking-widest"
-                            />
-                        </div>
-                        {loginError && <p className="text-red-400 text-xs text-center">{loginError}</p>}
-                        
-                        <button disabled={loading} className="w-full bg-brand-500 text-navy-950 font-bold py-4 rounded-xl flex items-center justify-center gap-2">
-                            {loading ? <div className='w-5 h-5 border-2 border-navy-950 rounded-full border-t-transparent animate-spin'></div> : 'ENTRAR AHORA'}
-                        </button>
-
-                        <button 
-                            type="button"
-                            onClick={contactAdmin}
-                            className="w-full text-slate-500 text-xs flex items-center justify-center gap-1 hover:text-white mt-4"
-                        >
-                            <HelpCircle size={12} /> No tengo código / Solicitar al Admin
-                        </button>
-                        <button 
-                            type="button"
-                            onClick={() => { setStep('phone'); setLoginError(''); }}
-                            className="w-full text-brand-500 text-xs mt-2"
-                        >
-                            Cambiar número
-                        </button>
-                   </form>
-               )}
-          </div>
+          <Login 
+            step={step} 
+            phone={phone} 
+            setPhone={setPhone} 
+            accessCode={accessCode} 
+            setAccessCode={setAccessCode} 
+            loginError={loginError} 
+            loading={loading} 
+            handlePhoneSubmit={handlePhoneSubmit} 
+            handleCodeSubmit={handleCodeSubmit} 
+            contactAdmin={contactAdmin} 
+            setStep={setStep} 
+            setLoginError={setLoginError} 
+          />
       );
   }
 
@@ -212,37 +166,15 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
 
   return (
     <div className="space-y-6">
-        <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Ticket className="text-brand-500" /> Mis Tickets <span className="text-slate-500 text-sm font-normal">({stickers.length})</span>
-            </h2>
-            <button onClick={() => { setIsLoggedIn(false); setStep('phone'); setPhone(''); setAccessCode(''); }} className="text-xs text-red-400 underline">Salir</button>
-        </div>
-
-        {/* Lottery Info */}
-        <div className="bg-navy-card p-4 rounded-xl border border-white/5 space-y-3">
-            <div className="flex justify-between items-center text-sm">
-                <span className="font-bold text-slate-400">Próximo Sorteo:</span>
-                <span className="font-mono font-bold text-white">{countdown}</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-                <span className="font-bold text-slate-400">Número Ganador:</span>
-                <div className="flex items-center gap-2">
-                    <Trophy size={16} className="text-yellow-400"/>
-                    <span className="font-mono font-bold text-2xl text-yellow-400 tracking-widest">{settings?.winningNumber || '----'}</span>
-                </div>
-            </div>
-        </div>
-
-        {/* Wallet Balance */}
-        <div className="bg-gradient-to-r from-green-500/20 to-cyan-500/20 p-4 rounded-2xl flex justify-between items-center border border-white/10">
-            <div className="flex items-center gap-3">
-                <Wallet size={20} className="text-green-400"/>
-                <span className="text-sm font-bold text-white uppercase tracking-wider">Saldo Billetera</span>
-            </div>
-            <div className="text-2xl font-mono font-black text-white">{formatMoney(walletBalance)}</div>
-        </div>
-
+        <button onClick={() => { setIsLoggedIn(false); setStep('phone'); setPhone(''); setAccessCode(''); }} className="text-xs text-red-400 underline absolute top-4 right-4">Salir</button>
+        <WalletHeader 
+            stickersCount={stickers.length}
+            countdown={countdown}
+            settings={settings}
+            walletBalance={walletBalance}
+            formatMoney={formatMoney}
+        />
+        
         {(stickers.length === 0 && walletBalance > 0) ? (
              <div className="flex flex-col items-center justify-center py-10 text-slate-500 space-y-4 bg-navy-card/50 rounded-2xl border border-white/5 border-dashed">
                 <Ticket size={40} className="opacity-50" />
@@ -254,132 +186,18 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
                 <p className="text-sm">No tienes tickets activos.</p>
              </div>
         ) : (
-          stickers.map((sticker) => {
-            const verifyUrl = `${window.location.origin}/?view=verify&code=${sticker.code}`;
-            const isPending = sticker.status === 'pending';
-            const isWinner = !isPending && settings?.winningNumber && settings.winningNumber === sticker.numbers;
-            const purchasedDate = new Date(sticker.purchasedAt);
-            const isSaturday = purchasedDate.getDay() === 6;
-            let prizeAmount = 0;
-            if (isWinner && settings) {
-                prizeAmount = isSaturday ? settings.jackpotAmount : settings.dailyPrizeAmount;
-            }
-            
-            const price = sticker.price || (sticker.isSupercharged && settings ? settings.ticketPrice * settings.superchargeMultiplier : settings?.ticketPrice);
-
-            if (isWinner) {
-                return (
-                    <div key={sticker.id} className="group relative">
-                        <div className="bg-gradient-to-br from-yellow-400 via-amber-300 to-yellow-500 rounded-2xl border-2 border-yellow-200 p-1 shadow-[0_0_25px_rgba(252,211,77,0.8)]">
-                            <div className="bg-black/20 rounded-xl p-4 flex flex-col items-center justify-center">
-                                <Trophy size={32} className="text-white mb-2" />
-                                <span className="font-black text-4xl text-white tracking-widest drop-shadow-lg">GANADOR</span>
-                                <div className="text-5xl font-mono font-black tracking-widest text-white my-3">
-                                    {sticker.numbers}
-                                </div>
-                                <div className="text-2xl font-bold text-white mb-3">{formatMoney(prizeAmount)}</div>
-                                <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded text-sm font-mono font-bold text-white">{sticker.code}</span>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-
-            const ticketBorder = isPending 
-                ? (sticker.isSupercharged ? 'border-amber-400/30' : 'border-yellow-500/30') 
-                : (sticker.isSupercharged ? 'border-amber-400' : 'border-brand-500/30');
-
-            const ticketHeader = isPending
-                ? (sticker.isSupercharged ? 'from-amber-500 to-amber-400' : 'from-yellow-600 to-yellow-500')
-                : (sticker.isSupercharged ? 'from-amber-500 to-amber-400' : 'from-brand-600 via-brand-500 to-brand-400');
-
-            return (
-                <div key={sticker.id} className="group relative">
-                    <div className={`bg-navy-card rounded-2xl border ${ticketBorder} overflow-hidden shadow-lg transition-transform active:scale-[0.98]`}>
-                        <div className={`p-1 relative overflow-hidden bg-gradient-to-r ${ticketHeader}`}>
-                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
-                            <div className="flex justify-between items-center px-3 py-1">
-                                <span className="font-black text-[10px] uppercase tracking-widest text-navy-950 flex items-center gap-1">
-                                    <Star size={10} fill="currentColor" /> {isPending ? 'PENDIENTE DE PAGO' : 'GanarApp'}
-                                </span>
-                                <span className="bg-navy-950/20 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-mono font-bold text-navy-950">{sticker.code}</span>
-                            </div>
-                        </div>
-
-                        <div className="p-4 flex items-center justify-between relative bg-gradient-to-b from-navy-900 to-navy-950">
-                            <div className='flex-1'>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded flex items-center gap-1">
-                                        <Zap size={8} fill="currentColor"/> Diario
-                                    </div>
-                                    <div className="text-[9px] bg-brand-500/20 text-brand-400 px-1.5 py-0.5 rounded flex items-center gap-1">
-                                        <Star size={8} fill="currentColor"/> Semanal
-                                    </div>
-                                </div>
-                                <div className={`text-5xl font-mono font-black tracking-widest ${isPending ? 'text-yellow-500' : (sticker.isSupercharged ? 'text-amber-400' : 'text-white')} group-hover:text-brand-400 transition-colors shadow-black drop-shadow-sm`}>
-                                    {sticker.numbers}
-                                </div>
-                                <div className="text-slate-400 font-bold text-lg mt-1">{formatMoney(price || 0)}</div>
-                                <div className="text-[10px] text-slate-500 mt-2 flex items-center gap-1">
-                                    <Calendar size={10}/> {new Date(sticker.purchasedAt).toLocaleDateString()} {new Date(sticker.purchasedAt).toLocaleTimeString()}
-                                </div>
-                                {isPending && (
-                                    <div className="text-[9px] text-red-400 mt-1 flex items-center gap-1">
-                                        <Clock size={10} /> Expira en 1 hora
-                                    </div>
-                                )}
-                            </div>
-                            
-                            <div className="bg-white/10 p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.1)] opacity-80 flex flex-col items-center justify-center w-[80px] h-[80px]">
-                                {isPending ? (
-                                     <div className="relative w-full h-full">
-                                        {paymentOptionsVisible === sticker.id ? (
-                                            <div className='absolute inset-0 bg-navy-800 rounded-lg p-1.5 flex flex-col gap-1.5 z-10 animate-in fade-in duration-300'>
-                                                <button onClick={() => setPaymentOptionsVisible(null)} className='absolute -top-1.5 -right-1.5 bg-red-500 rounded-full p-0.5 z-20'><X size={12}/></button>
-                                                <button 
-                                                    onClick={() => handlePayWithWallet(sticker)} 
-                                                    disabled={loading || walletBalance < (price || 0)}
-                                                    className='w-full flex-1 bg-green-500 text-navy-950 rounded-md text-[10px] font-black disabled:bg-gray-500 disabled:opacity-50'
-                                                >CON SALDO</button>
-                                                <button onClick={() => handlePayWithMercadoPago(sticker)} className='w-full flex-1 bg-blue-500 text-white rounded-md text-[10px] font-black'>MERCADO PAGO</button>
-                                            </div>
-                                        ) : (
-                                            <button 
-                                                onClick={() => setPaymentOptionsVisible(sticker.id)}
-                                                className="w-full h-full bg-brand-500 hover:bg-brand-400 text-navy-950 font-black text-xs leading-tight text-center rounded-md flex flex-col items-center justify-center p-1"
-                                            >
-                                                PAGAR<br/>AHORA
-                                            </button>
-                                        )}
-                                     </div>
-                                ) : (
-                                    <a href={verifyUrl} target="_blank" rel="noopener noreferrer" className='bg-white rounded-lg'>
-                                        <QRCodeCanvas 
-                                            value={verifyUrl}
-                                            size={70}
-                                            level={"M"}
-                                            includeMargin={false}
-                                        />
-                                    </a>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                    {sticker.isSupercharged === true && settings?.superchargePrizeImage && (
-                        <div className="absolute -top-5 -right-5 w-24 transform rotate-[15deg] pointer-events-none flex flex-col items-center">
-                             <img 
-                                src={settings.superchargePrizeImage} 
-                                alt="Potenciado" 
-                                className="w-full h-auto drop-shadow-lg"
-                            />
-                            <p className="text-[10px] font-bold text-navy-950 bg-amber-400 px-2 py-0.5 rounded-md -mt-2 shadow-lg">
-                                JUEGA EL SÁBADO
-                            </p>
-                        </div>
-                    )}
-                </div>
-            );
-          })
+          stickers.map((sticker) => (
+            <Sticker 
+                key={sticker.id}
+                sticker={sticker}
+                settings={settings}
+                onPayWithWallet={handlePayWithWallet}
+                onPayWithMercadoPago={handlePayWithMercadoPago}
+                loading={loading}
+                walletBalance={walletBalance}
+                formatMoney={formatMoney}
+            />
+          ))
       )}
     </div>
   );
