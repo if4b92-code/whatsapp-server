@@ -14,7 +14,6 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [loading, setLoading] = useState(false);
   
-  // Login State
   const [step, setStep] = useState<'phone' | 'code'>('phone');
   const [phone, setPhone] = useState('');
   const [accessCode, setAccessCode] = useState('');
@@ -110,7 +109,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
   const handlePayWithWallet = async (sticker: Sticker) => {
       if (!settings) return;
       setLoading(true);
-      const result = await dbService.payWithWallet(phone, sticker.id, settings.ticketPrice);
+      const result = await dbService.payWithWallet(phone, sticker.id, sticker.price);
       if (result.success) {
           onSuccess(sticker.code);
       } else {
@@ -122,7 +121,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
   const handlePayWithMercadoPago = async (sticker: Sticker) => {
       if (!settings) return;
       try {
-          await paymentService.createMercadoPagoPreference(settings.ticketPrice, sticker.code);
+          await paymentService.createMercadoPagoPreference(sticker.price, sticker.code);
       } catch (err: any) {
           if (err.message === "MP_TOKEN_MISSING") {
               alert("⚠️ Error de Configuración: Falta Access Token de Mercado Pago en Admin.");
@@ -208,7 +207,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
       );
   }
 
-  if (loading) {
+  if (loading && stickers.length === 0) {
     return <div className="flex justify-center mt-20"><div className="animate-spin w-8 h-8 border-4 border-brand-500 rounded-full border-t-transparent"></div></div>;
   }
 
@@ -235,7 +234,6 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
                 </div>
             </div>
         </div>
-
 
         {/* Wallet Balance */}
         <div className="bg-gradient-to-r from-green-500/20 to-cyan-500/20 p-4 rounded-2xl flex justify-between items-center border border-white/10">
@@ -286,10 +284,18 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
                 )
             }
 
+            const ticketBorder = isPending 
+                ? (sticker.isSupercharged ? 'border-amber-400/30' : 'border-yellow-500/30') 
+                : (sticker.isSupercharged ? 'border-amber-400' : 'border-brand-500/30');
+
+            const ticketHeader = isPending
+                ? (sticker.isSupercharged ? 'from-amber-500 to-amber-400' : 'from-yellow-600 to-yellow-500')
+                : (sticker.isSupercharged ? 'from-amber-500 to-amber-400' : 'from-brand-600 via-brand-500 to-brand-400');
+
             return (
                 <div key={sticker.id} className="group relative">
-                    <div className={`bg-navy-card rounded-2xl border ${isPending ? 'border-yellow-500/30' : 'border-brand-500/30'} overflow-hidden shadow-lg transition-transform active:scale-[0.98]`}>
-                        <div className={`p-1 relative overflow-hidden bg-gradient-to-r ${isPending ? 'from-yellow-600 to-yellow-500' : 'from-brand-600 via-brand-500 to-brand-400'}`}>\
+                    <div className={`bg-navy-card rounded-2xl border ${ticketBorder} overflow-hidden shadow-lg transition-transform active:scale-[0.98]`}>
+                        <div className={`p-1 relative overflow-hidden bg-gradient-to-r ${ticketHeader}`}>\
                             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
                             <div className="flex justify-between items-center px-3 py-1">
                                 <span className="font-black text-[10px] uppercase tracking-widest text-navy-950 flex items-center gap-1">
@@ -301,7 +307,12 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
 
                         <div className="p-4 flex items-center justify-between relative bg-gradient-to-b from-navy-900 to-navy-950">
                             <div>
-                                <div className="flex items-center gap-2 mb-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                    {sticker.isSupercharged && (
+                                        <div className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded flex items-center gap-1 font-bold">
+                                            <Zap size={8} fill="currentColor"/> Supercharged
+                                        </div>
+                                    )}
                                     <div className="text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded flex items-center gap-1">
                                         <Zap size={8} fill="currentColor"/> Diario
                                     </div>
@@ -309,15 +320,15 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
                                         <Star size={8} fill="currentColor"/> Semanal
                                     </div>
                                 </div>
-                                <div className={`text-5xl font-mono font-black tracking-widest ${isPending ? 'text-yellow-500' : 'text-white group-hover:text-brand-400'} transition-colors shadow-black drop-shadow-sm`}>
+                                <div className={`text-5xl font-mono font-black tracking-widest ${isPending ? 'text-yellow-500' : (sticker.isSupercharged ? 'text-amber-400' : 'text-white')} group-hover:text-brand-400 transition-colors shadow-black drop-shadow-sm`}>
                                     {sticker.numbers}
                                 </div>
                                 <div className="text-[10px] text-slate-500 mt-2 flex items-center gap-1">
-                                    <Calendar size={10}/> {new Date(sticker.purchasedAt).toLocaleDateString()}
+                                    <Calendar size={10}/> {new Date(sticker.purchasedAt).toLocaleDateString()} {new Date(sticker.purchasedAt).toLocaleTimeString()}
                                 </div>
                                 {isPending && (
                                     <div className="text-[9px] text-red-400 mt-1 flex items-center gap-1">
-                                        <Clock size={10} /> Expira en 1 hora
+                                        <Clock size={10} /> {formatMoney(sticker.price)} - Expira en 1 hora
                                     </div>
                                 )}
                             </div>
@@ -330,7 +341,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
                                                 <button onClick={() => setPaymentOptionsVisible(null)} className='absolute -top-1.5 -right-1.5 bg-red-500 rounded-full p-0.5 z-20'><X size={12}/></button>
                                                 <button 
                                                     onClick={() => handlePayWithWallet(sticker)} 
-                                                    disabled={loading || walletBalance < (settings?.ticketPrice || 0)}
+                                                    disabled={loading || walletBalance < sticker.price}
                                                     className='w-full flex-1 bg-green-500 text-navy-950 rounded-md text-[10px] font-black disabled:bg-gray-500 disabled:opacity-50'
                                                 >CON SALDO</button>
                                                 <button onClick={() => handlePayWithMercadoPago(sticker)} className='w-full flex-1 bg-blue-500 text-white rounded-md text-[10px] font-black'>MERCADO PAGO</button>

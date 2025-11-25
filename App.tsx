@@ -11,6 +11,7 @@ import { dbService } from './services/db';
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<string>('home');
   const [verifyCode, setVerifyCode] = useState<string>('');
+  const [isSuperchargedFromHome, setIsSuperchargedFromHome] = useState(false);
 
   useEffect(() => {
       const params = new URLSearchParams(window.location.search);
@@ -64,12 +65,17 @@ const App: React.FC = () => {
     window.history.pushState({}, '', `/?view=verify&code=${stickerCode}`);
   }
 
+  const handleBuyClick = (price: number, isSupercharged: boolean) => {
+    setIsSuperchargedFromHome(isSupercharged);
+    setCurrentView('buy');
+  }
+
   const renderView = () => {
     switch (currentView) {
       case 'home':
-        return <HomePage onBuyClick={() => setCurrentView('buy')} />;
+        return <HomePage onBuyClick={handleBuyClick} />;
       case 'buy':
-        return <BuyStickerPage onSuccess={handleBuySuccess} onBack={() => setCurrentView('home')} />;
+        return <BuyStickerPage onSuccess={handleBuySuccess} onBack={() => setCurrentView('home')} isSupercharged={isSuperchargedFromHome} />;
       case 'wallet':
         return <WalletPage onSuccess={handleBuySuccess} />;
       case 'admin':
@@ -77,7 +83,7 @@ const App: React.FC = () => {
       case 'verify':
         return <VerifyTicketPage code={verifyCode} onHome={() => setCurrentView('home')} />;
       default:
-        return <HomePage onBuyClick={() => setCurrentView('buy')} />;
+        return <HomePage onBuyClick={handleBuyClick} />;
     }
   };
 

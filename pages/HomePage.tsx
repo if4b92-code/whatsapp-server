@@ -2,16 +2,17 @@
 import React, { useEffect, useState } from 'react';
 import { dbService } from '../services/db';
 import { GlobalSettings, LotterySchedule } from '../types';
-import { Trophy, ChevronRight, Info, Clover, Star, Users, Heart } from 'lucide-react';
+import { Trophy, ChevronRight, Info, Clover, Star, Users, Heart, Zap } from 'lucide-react';
 
 interface Props {
-  onBuyClick: () => void;
+  onBuyClick: (price: number, isSupercharged: boolean) => void;
 }
 
 export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
   const [settings, setSettings] = useState<GlobalSettings | null>(null);
   const [dailyLottery, setDailyLottery] = useState<LotterySchedule | null>(null);
   const [saturdayLottery, setSaturdayLottery] = useState<LotterySchedule | null>(null);
+  const [isSuperchargeActive, setIsSuperchargeActive] = useState(false);
 
   const formatMoney = (amount: number) => 
     new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(amount);
@@ -25,7 +26,6 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
         const today = new Date();
         let dayOfWeek = today.getDay(); // Sunday is 0
         
-        // On Sunday, we show Monday's lottery
         if (dayOfWeek === 0) {
             dayOfWeek = 1;
         }
@@ -48,9 +48,50 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
 
   if (!settings) return <div className="flex justify-center mt-20"><div className="animate-spin w-8 h-8 border-4 border-amber-400 rounded-full border-t-transparent"></div></div>;
 
+  const currentTicketPrice = isSuperchargeActive 
+    ? settings.ticketPrice * (settings.superchargeMultiplier || 1) 
+    : settings.ticketPrice;
+
   return (
     <div className="space-y-8">
       
+      {/* --- SUPERCHARGE SECTION --- */}
+      {settings.superchargePrizeName && (
+        <div
+          onClick={() => setIsSuperchargeActive(!isSuperchargeActive)}
+          className={`rounded-2xl p-4 border-2 transition-all duration-300 ease-in-out cursor-pointer group ${
+            isSuperchargeActive
+              ? 'border-amber-400 bg-amber-900/20 shadow-[0_0_40px_rgba(250,204,21,0.3)]'
+              : 'border-navy-700 bg-navy-800/30 hover:border-amber-500/50'
+          }`}
+        >
+          <div className="flex items-center">
+            {settings.superchargePrizeImage && (
+                <img src={settings.superchargePrizeImage} alt={settings.superchargePrizeName} className="w-24 h-auto rounded-md shadow-lg mr-4" />
+            )}
+            <div className="flex-grow">
+              <div className="flex items-center gap-3">
+                <Zap size={20} className={`transition-colors ${isSuperchargeActive ? 'text-amber-400' : 'text-slate-500 group-hover:text-amber-500'}`} />
+                <h2 className="text-lg font-bold text-white">
+                  Activar Supercharge x{settings.superchargeMultiplier}
+                </h2>
+              </div>
+              <p className="text-sm text-slate-400 pl-8">
+                ¡Participa por la <strong>{settings.superchargePrizeName}</strong> y más!
+              </p>
+            </div>
+            <div className={`w-14 h-8 rounded-full flex items-center p-1 transition-colors ${isSuperchargeActive ? 'bg-amber-400' : 'bg-navy-700'}`}>
+              <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${isSuperchargeActive ? 'translate-x-6' : 'translate-x-0'}`}/>
+            </div>
+          </div>
+          {isSuperchargeActive && (
+            <div className="mt-4 text-center">
+              <p className="text-xs text-slate-300 font-medium">¡Genial! Con Supercharge activado, el valor de tu ticket es de <b className="text-white">{formatMoney(currentTicketPrice)}</b> y participas por premios increíbles.</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* --- MAIN HERO CARD --- */}
       <div className="relative">
         <div className="absolute -inset-2 bg-gradient-to-t from-amber-500 to-blue-600 rounded-[30px] opacity-30 blur-xl"></div>
@@ -77,12 +118,12 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
                 </div>
 
                 <button 
-                    onClick={onBuyClick}
+                    onClick={() => onBuyClick(currentTicketPrice, isSuperchargeActive)}
                     className="w-full bg-amber-400 hover:bg-amber-300 text-slate-900 font-black text-lg py-4 rounded-xl shadow-[0_0_30px_rgba(250,204,21,0.4)] transition-all active:scale-[0.97] flex items-center justify-between px-6"
                 >
                     <span>COMPRAR TICKET</span>
                     <span className="flex items-center gap-2">
-                      <span className="bg-slate-900/20 px-3 py-1 rounded-md text-sm font-mono">{formatMoney(settings.ticketPrice)}</span>
+                      <span className="bg-slate-900/20 px-3 py-1 rounded-md text-sm font-mono">{formatMoney(currentTicketPrice)}</span>
                       <ChevronRight strokeWidth={4} size={22} />
                     </span>
                 </button>

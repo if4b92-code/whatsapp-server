@@ -3,20 +3,22 @@ import React, { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
 import { paymentService } from '../services/paymentService';
 import { GlobalSettings, Sticker, LotterySchedule } from '../types';
-import { AlertTriangle, Dices, Delete, ShieldCheck, ArrowLeft, ArrowRight, CreditCard, User, Phone, CheckCircle, Wallet } from 'lucide-react';
+import { AlertTriangle, Dices, Delete, ShieldCheck, ArrowLeft, ArrowRight, CreditCard, User, Phone, CheckCircle, Wallet, Zap } from 'lucide-react';
 
 interface Props {
   onSuccess: (stickerCode: string) => void;
   onBack: () => void;
+  isSupercharged: boolean;
 }
 
-export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack }) => {
+export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSupercharged: isSuperchargedFromHome }) => {
   const [numbers, setNumbers] = useState('');
   const [step, setStep] = useState<'select' | 'user_info' | 'payment_method'>('select');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState<GlobalSettings | null>(null);
   const [dynamicMessage, setDynamicMessage] = useState('');
+  const [isSupercharged, setIsSupercharged] = useState(isSuperchargedFromHome);
 
   // User Info Form
   const [userName, setUserName] = useState('');
@@ -28,6 +30,8 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack }) => {
   const [userBalance, setUserBalance] = useState(0);
 
   const formatMoney = (val: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
+
+  const ticketPrice = settings ? (isSupercharged ? settings.ticketPrice * (settings.superchargeMultiplier || 1) : settings.ticketPrice) : 0;
 
   useEffect(() => {
     const init = async () => {
@@ -118,7 +122,7 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack }) => {
           fullName: userName,
           phone: fullPhone,
           countryCode,
-      });
+      }, ticketPrice, isSupercharged);
       
       if (result.success && result.sticker) {
           setPendingSticker(result.sticker);
@@ -136,7 +140,7 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack }) => {
       setLoading(true);
       const fullPhone = `${countryCode}${phone}`;
       
-      const result = await dbService.payWithWallet(fullPhone, pendingSticker.id, settings.ticketPrice);
+      const result = await dbService.payWithWallet(fullPhone, pendingSticker.id, ticketPrice);
       if (result.success) {
           onSuccess(pendingSticker.code);
       } else {
@@ -149,7 +153,7 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack }) => {
       if (!settings || !pendingSticker) return;
       setLoading(true);
       try {
-          await paymentService.createMercadoPagoPreference(settings.ticketPrice, pendingSticker.code);
+          await paymentService.createMercadoPagoPreference(ticketPrice, pendingSticker.code);
       } catch (err: any) {
           setLoading(false);
           if (err.message === "MP_TOKEN_MISSING") {
@@ -248,11 +252,12 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack }) => {
                 <div className="text-6xl font-mono font-black text-brand-400 my-2 drop-shadow-lg tracking-widest">
                     {numbers}
                 </div>
-                <p className="text-slate-400 text-sm">Valor a pagar: <span className="text-white font-bold">{formatMoney(settings.ticketPrice)}</span></p>
+                <p className="text-slate-400 text-sm">Valor a pagar: <span className="text-white font-bold">{formatMoney(ticketPrice)}</span></p>
+                {isSupercharged && <p className='text-xs text-amber-400 font-bold'>¡TICKET POTENCIADO!</p>}
             </div>
 
             <div className="space-y-4 flex-1">
-                {userBalance >= settings.ticketPrice && (
+                {userBalance >= ticketPrice && (
                     <button 
                         onClick={payWithWallet}
                         disabled={loading}
@@ -304,23 +309,43 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack }) => {
 
   return (
     <div className="flex flex-col h-full justify-end pb-4 space-y-4 px-4">
-      <div className="flex-1 flex flex-col justify-center items-center">
-         <div className="text-center space-y-2 mb-6">
-            <h2 className="text-xl font-bold text-white">Elige tus 4 Cifras</h2>
-            <p className="text-slate-400 text-xs uppercase" dangerouslySetInnerHTML={{ __html: dynamicMessage.replace(/(\$\d{1,3}(?:\.\d{3})*)/g, '<span class="text-amber-400 font-bold">$1</span>') }}></p>
-        </div>
-
-        <div className={`w-full max-w-sm mx-auto bg-navy-900 p-6 rounded-2xl border-2 ${error ? 'border-red-500/50' : 'border-navy-800'} flex flex-col items-center justify-center relative shadow-inner`}>
-            <div className="text-6xl font-mono font-bold tracking-[0.3em] text-white min-h-[4rem] z-10">
-                {loading ? <div className="animate-pulse text-white/20">----</div> : numbers.padEnd(4, '-')}
+        <div className="flex-1 flex flex-col justify-center items-center">
+            <div className="text-center space-y-2 mb-6">
+                <h2 className="text-xl font-bold text-white">Elige tus 4 Cifras</h2>
+                <p className="text-slate-400 text-xs uppercase" dangerouslySetInnerHTML={{ __html: dynamicMessage.replace(/(\$\d{1,3}(?:\.\d{3})*)/g, '<span class="text-amber-400 font-bold">$1</span>') }}></p>
             </div>
-            {error && (
-                <div className="absolute -bottom-8 left-0 right-0 flex items-center justify-center gap-1 text-red-400 text-xs font-bold animate-pulse">
-                    <AlertTriangle size={12} /> {error}
+            
+            <div className="absolute top-4 right-4 bg-navy-950/80 backdrop-blur-sm p-2 rounded-lg border border-white/10">
+                <span className="text-xs text-slate-400">Valor</span>
+                <span className="text-white font-bold text-lg">{formatMoney(ticketPrice)}</span>
+            </div>
+
+            <div className={`w-full max-w-sm mx-auto bg-navy-900 p-6 rounded-2xl border-2 ${error ? 'border-red-500/50' : 'border-navy-800'} flex flex-col items-center justify-center relative shadow-inner mb-4`}>
+                <div className="text-6xl font-mono font-bold tracking-[0.3em] text-white min-h-[4rem] z-10">
+                    {loading ? <div className="animate-pulse text-white/20">----</div> : numbers.padEnd(4, '-')}
                 </div>
+                {error && (
+                    <div className="absolute -bottom-8 left-0 right-0 flex items-center justify-center gap-1 text-red-400 text-xs font-bold animate-pulse">
+                        <AlertTriangle size={12} /> {error}
+                    </div>
+                )}
+            </div>
+
+            {settings.superchargeMultiplier > 1 && (
+                 <button 
+                    onClick={() => setIsSupercharged(!isSupercharged)}
+                    className={`w-full max-w-sm mx-auto p-2 rounded-lg font-bold uppercase tracking-wider flex items-center justify-center gap-4 transition-all active:scale-95 disabled:opacity-50 mb-3 text-base ${isSupercharged ? 'bg-amber-400 text-navy-950' : 'bg-navy-700 text-amber-400'}`}
+                >
+                    <div className="flex items-center gap-2">
+                        <Zap size={20} />
+                        <span>{isSupercharged ? `Potenciado x${settings.superchargeMultiplier}` : '¡Potenciar!'}</span>
+                    </div>
+                    {settings.superchargePrizeImage && (
+                        <img src={settings.superchargePrizeImage} alt="Premio Potenciado" className="w-24 h-auto rounded-md" />
+                    )}
+                </button>
             )}
         </div>
-      </div>
 
       <div className="w-full max-w-sm mx-auto">
         <button 
