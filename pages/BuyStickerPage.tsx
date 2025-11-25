@@ -79,8 +79,6 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
     setLoading(true);
     setNumbers(''); // Clear existing numbers
     let randomNum = '';
-    // For simplicity, we'll just generate a random number client-side.
-    // A check for uniqueness can be added if required, as in the original code.
     randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     setNumbers(randomNum);
     setLoading(false);
@@ -99,7 +97,7 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
       setError("Número Ocupado");
       return;
     }
-    setStep('user_info'); // Go to User Info Form
+    setStep('user_info');
   };
 
   const createTicketAndProceed = async () => {
@@ -110,10 +108,10 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
       
       setLoading(true);
       const fullPhone = `${countryCode}${phone}`;
-      const result = await dbService.createPendingTicket(numbers, {
-          fullName: userName,
-          phone: fullPhone,
-          countryCode,
+      const result = await dbService.createPendingTicket(numbers, { 
+          fullName: userName, 
+          phone: fullPhone, 
+          countryCode 
       }, ticketPrice, isSupercharged);
       
       if (result.success && result.sticker) {
@@ -160,7 +158,6 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
 
   if (!settings) return <div className="flex items-center justify-center h-full"><div className="animate-spin w-8 h-8 border-4 border-amber-400 rounded-full border-t-transparent"></div></div>;
   
-  // USER INFO FORM STEP
   if (step === 'user_info') {
       return (
         <div className="space-y-6 animate-in slide-in-from-bottom-10 duration-300 h-full flex flex-col px-4">
@@ -230,7 +227,6 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
       );
   }
 
-  // PAYMENT METHOD STEP
   if (step === 'payment_method') {
       return (
         <div className="space-y-6 animate-in slide-in-from-bottom-10 duration-300 h-full flex flex-col px-4">
@@ -301,7 +297,6 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
       );
   }
 
-  // NUMBER SELECTION STEP
   return (
     <div className="flex flex-col h-full justify-end pb-4 space-y-4 px-4">
         <div className="flex-1 flex flex-col justify-center items-center">

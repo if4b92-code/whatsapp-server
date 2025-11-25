@@ -308,11 +308,6 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
                         <div className="p-4 flex items-center justify-between relative bg-gradient-to-b from-navy-900 to-navy-950">
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
-                                    {sticker.isSupercharged && (
-                                        <div className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded flex items-center gap-1 font-bold">
-                                            <Zap size={8} fill="currentColor"/> Supercharged
-                                        </div>
-                                    )}
                                     <div className="text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded flex items-center gap-1">
                                         <Zap size={8} fill="currentColor"/> Diario
                                     </div>
@@ -368,6 +363,13 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
                             </div>
                         </div>
                     </div>
+                    {sticker.isSupercharged && settings?.superchargePrizeImage && (
+                        <img 
+                            src={settings.superchargePrizeImage} 
+                            alt="Potenciado" 
+                            className="absolute -top-5 -right-5 w-24 h-auto transform rotate-[15deg] drop-shadow-lg pointer-events-none"
+                        />
+                    )}
                 </div>
             );
           })

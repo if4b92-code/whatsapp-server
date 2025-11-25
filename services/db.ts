@@ -19,7 +19,6 @@ export const dbService = {
   addLotteryResult: async (result: LotteryResult): Promise<LotteryResult | null> => {
     if (!isCloudEnabled || !supabase) return null;
 
-    // Manually map from JS camelCase to DB snake_case before inserting
     const dbPayload = {
       drawn_at: result.drawnAt,
       winning_number: result.winningNumber,
@@ -41,7 +40,6 @@ export const dbService = {
     }
 
     const returnedData = data[0];
-    // Map back from snake_case to camelCase for the app to use
     return {
         id: returnedData.id,
         drawnAt: returnedData.drawn_at,
@@ -57,14 +55,13 @@ export const dbService = {
     const { data, error } = await supabase
       .from('lottery_results')
       .select('*')
-      .order('drawn_at', { ascending: false }); // Use snake_case for ordering
+      .order('drawn_at', { ascending: false });
 
     if (error) {
       console.error("Error fetching lottery history:", error);
       return [];
     }
 
-    // Map results from snake_case to camelCase for the app to use
     return (data || []).map(item => ({
         id: item.id,
         drawnAt: item.drawn_at,
@@ -159,9 +156,9 @@ export const dbService = {
       .eq('numbers', numbers)
       .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116: "object not found"
+    if (error && error.code !== 'PGRST116') { 
       console.error("Error checking if number is taken:", error);
-      return true; // Assume taken to be safe
+      return true; 
     }
 
     return data != null;
@@ -209,7 +206,6 @@ export const dbService = {
     
     return { success: true, message: 'Pago completado con éxito.' };
   },
-
 
   generateUserAccessCode: async (phone: string): Promise<string> => {
     if (!isCloudEnabled || !supabase) return ''
@@ -263,7 +259,7 @@ export const dbService = {
 
     const { data, error } = await supabase
       .from('stickers')
-      .select('*')
+      .select('*, is_supercharged')
       .eq('userId', phoneNumber);
 
     if (error) {
@@ -271,7 +267,7 @@ export const dbService = {
       return [];
     }
 
-    return data as Sticker[];
+    return data.map(s => ({...s, isSupercharged: s.is_supercharged})) as Sticker[];
   },
 
   getTopBuyers: async (): Promise<{ docId: string, name: string, count: number }[]> => {
@@ -286,7 +282,7 @@ export const dbService = {
     return data || [];
   },
 
-  createPendingTicket: async (numbers: string, ownerData: OwnerData): Promise<{ success: boolean, message: string, sticker?: Sticker }> => {
+  createPendingTicket: async (numbers: string, ownerData: OwnerData, price: number, isSupercharged: boolean): Promise<{ success: boolean, message: string, sticker?: Sticker }> => {
     if (!isCloudEnabled || !supabase) return { success: false, message: "Database not connected" };
 
     if (numbers.length !== 4 || isNaN(Number(numbers))) {
@@ -299,7 +295,7 @@ export const dbService = {
     const code = `GA-${dateStr}-${randomPart}`;
     const hash = btoa(`HMAC_${code}`);
 
-    const newSticker: Partial<Sticker> = {
+    const newStickerPayload = {
       id: uuidv4(),
       code,
       numbers,
@@ -308,11 +304,13 @@ export const dbService = {
       status: 'pending',
       hash,
       ownerData: ownerData,
+      price: price,
+      is_supercharged: isSupercharged,
     };
 
     const { data, error } = await supabase
       .from('stickers')
-      .insert(newSticker)
+      .insert(newStickerPayload)
       .select();
 
     if (error) {
@@ -320,8 +318,14 @@ export const dbService = {
       if (error.code === '23505') return { success: false, message: `El número ${numbers} ya está en proceso de compra o vendido.` };
       return { success: false, message: "Error creating ticket" };
     }
+    
+    const resultSticker = data[0];
+    const stickerToReturn: Sticker = {
+        ...resultSticker,
+        isSupercharged: resultSticker.is_supercharged
+    };
 
-    return { success: true, message: "Ticket generado", sticker: data[0] as Sticker };
+    return { success: true, message: "Ticket generado", sticker: stickerToReturn };
   },
 
   approveTicketManually: async (stickerId: string) => {
@@ -345,7 +349,7 @@ export const dbService = {
 
     const { data, error } = await supabase
       .from('stickers')
-      .select('*')
+      .select('*, is_supercharged')
       .eq('code', code)
       .single();
 
@@ -354,7 +358,7 @@ export const dbService = {
       return null;
     }
 
-    return data as Sticker;
+    return {...data, isSupercharged: data.is_supercharged} as Sticker;
   },
 
   updateStickerOwner: async (stickerId: string, ownerData: Partial<OwnerData>) => {
