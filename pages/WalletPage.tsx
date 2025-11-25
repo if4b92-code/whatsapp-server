@@ -14,7 +14,7 @@ interface Props {
 
 export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
   const [stickers, setStickers] = useState<StickerType[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start loading initially to check session
   
   const [step, setStep] = useState<'phone' | 'code'>('phone');
   const [phone, setPhone] = useState('');
@@ -28,8 +28,17 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
 
   useEffect(() => {
     const init = async () => {
-       const s = await dbService.getSettings();
-       setSettings(s);
+      const s = await dbService.getSettings();
+      setSettings(s);
+
+      const savedPhone = localStorage.getItem('userPhone');
+      if (savedPhone) {
+        setPhone(savedPhone);
+        await fetchUserData(savedPhone);
+        setIsLoggedIn(true);
+      } else {
+        setLoading(false);
+      }
     };
     init();
 
@@ -78,6 +87,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
   };
 
   const fetchUserData = async (userPhone: string) => {
+    setLoading(true);
     const [userStickers, balance, settingsData] = await Promise.all([
         dbService.getStickersByPhone(userPhone),
         dbService.getWalletBalance(userPhone),
@@ -87,6 +97,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
     setStickers(sortedStickers);
     setWalletBalance(balance);
     setSettings(settingsData);
+    setLoading(false);
   }
 
   const handleCodeSubmit = async (e: React.FormEvent) => {
@@ -96,6 +107,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
 
       const isValid = await dbService.validateUserAccessCode(phone, accessCode);
       if (isValid) {
+          localStorage.setItem('userPhone', phone);
           await fetchUserData(phone);
           setIsLoggedIn(true);
       } else {
@@ -132,6 +144,16 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
           }
       }
   };
+  
+  const handleLogout = () => {
+      localStorage.removeItem('userPhone');
+      setIsLoggedIn(false);
+      setStep('phone');
+      setPhone('');
+      setAccessCode('');
+      setStickers([]);
+      setWalletBalance(0);
+  };
 
   const contactAdmin = () => {
       if (!settings?.adminWhatsApp) return;
@@ -140,6 +162,10 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
   };
 
   const formatMoney = (val: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
+
+  if (loading && !isLoggedIn) { // Initial loading screen
+    return <div className="flex justify-center mt-20"><div className="animate-spin w-8 h-8 border-4 border-brand-500 rounded-full border-t-transparent"></div></div>;
+  }
 
   if (!isLoggedIn) {
       return (
@@ -160,13 +186,9 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
       );
   }
 
-  if (loading && stickers.length === 0) {
-    return <div className="flex justify-center mt-20"><div className="animate-spin w-8 h-8 border-4 border-brand-500 rounded-full border-t-transparent"></div></div>;
-  }
-
   return (
     <div className="space-y-6">
-        <button onClick={() => { setIsLoggedIn(false); setStep('phone'); setPhone(''); setAccessCode(''); }} className="text-xs text-red-400 underline absolute top-4 right-4">Salir</button>
+        <button onClick={handleLogout} className="text-xs text-red-400 underline absolute top-4 right-4 z-10">Salir</button>
         <WalletHeader 
             stickersCount={stickers.length}
             countdown={countdown}
@@ -175,7 +197,9 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
             formatMoney={formatMoney}
         />
         
-        {(stickers.length === 0 && walletBalance > 0) ? (
+        {loading ? (
+            <div className="flex justify-center mt-10"><div className="animate-spin w-8 h-8 border-4 border-brand-500 rounded-full border-t-transparent"></div></div>
+        ) : (stickers.length === 0 && walletBalance > 0) ? (
              <div className="flex flex-col items-center justify-center py-10 text-slate-500 space-y-4 bg-navy-card/50 rounded-2xl border border-white/5 border-dashed">
                 <Ticket size={40} className="opacity-50" />
                 <p className="text-sm">No tienes tickets, ¡pero tienes saldo para comprar!</p>
@@ -186,18 +210,20 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
                 <p className="text-sm">No tienes tickets activos.</p>
              </div>
         ) : (
-          stickers.map((sticker) => (
-            <Sticker 
-                key={sticker.id}
-                sticker={sticker}
-                settings={settings}
-                onPayWithWallet={handlePayWithWallet}
-                onPayWithMercadoPago={handlePayWithMercadoPago}
-                loading={loading}
-                walletBalance={walletBalance}
-                formatMoney={formatMoney}
-            />
-          ))
+          <div className="space-y-4">
+            {stickers.map((sticker) => (
+              <Sticker 
+                  key={sticker.id}
+                  sticker={sticker}
+                  settings={settings}
+                  onPayWithWallet={handlePayWithWallet}
+                  onPayWithMercadoPago={handlePayWithMercadoPago}
+                  loading={loading}
+                  walletBalance={walletBalance}
+                  formatMoney={formatMoney}
+              />
+            ))}
+          </div>
       )}
     </div>
   );
