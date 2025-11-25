@@ -64,13 +64,10 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
     if (searchPhone.length === 10) searchPhone = '57' + searchPhone;
     setPhone(searchPhone);
 
-    const [userStickers, balance] = await Promise.all([
-        dbService.getStickersByPhone(searchPhone),
-        dbService.getWalletBalance(searchPhone)
-    ]);
+    const codeSent = await dbService.generateUserAccessCode(searchPhone);
 
-    if (userStickers.length === 0 && balance === 0) {
-        setLoginError('No tienes tickets ni saldo en tu billetera.');
+    if (!codeSent) {
+        setLoginError('No pudimos generar tu código. Intenta de nuevo.');
         setLoading(false);
         return;
     }
@@ -108,8 +105,9 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
 
   const handlePayWithWallet = async (sticker: Sticker) => {
       if (!settings) return;
+      const price = sticker.price || settings.ticketPrice;
       setLoading(true);
-      const result = await dbService.payWithWallet(phone, sticker.id, sticker.price);
+      const result = await dbService.payWithWallet(phone, sticker.id, price);
       if (result.success) {
           onSuccess(sticker.code);
       } else {
@@ -120,8 +118,9 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
 
   const handlePayWithMercadoPago = async (sticker: Sticker) => {
       if (!settings) return;
+      const price = sticker.price || settings.ticketPrice;
       try {
-          await paymentService.createMercadoPagoPreference(sticker.price, sticker.code);
+          await paymentService.createMercadoPagoPreference(price, sticker.code);
       } catch (err: any) {
           if (err.message === "MP_TOKEN_MISSING") {
               alert("⚠️ Error de Configuración: Falta Access Token de Mercado Pago en Admin.");
@@ -265,6 +264,8 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
             if (isWinner && settings) {
                 prizeAmount = isSaturday ? settings.jackpotAmount : settings.dailyPrizeAmount;
             }
+            
+            const price = sticker.price || (sticker.isSupercharged && settings ? settings.ticketPrice * settings.superchargeMultiplier : settings?.ticketPrice);
 
             if (isWinner) {
                 return (
@@ -295,7 +296,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
             return (
                 <div key={sticker.id} className="group relative">
                     <div className={`bg-navy-card rounded-2xl border ${ticketBorder} overflow-hidden shadow-lg transition-transform active:scale-[0.98]`}>
-                        <div className={`p-1 relative overflow-hidden bg-gradient-to-r ${ticketHeader}`}>\
+                        <div className={`p-1 relative overflow-hidden bg-gradient-to-r ${ticketHeader}`}>
                             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
                             <div className="flex justify-between items-center px-3 py-1">
                                 <span className="font-black text-[10px] uppercase tracking-widest text-navy-950 flex items-center gap-1">
@@ -306,7 +307,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
                         </div>
 
                         <div className="p-4 flex items-center justify-between relative bg-gradient-to-b from-navy-900 to-navy-950">
-                            <div>
+                            <div className='flex-1'>
                                 <div className="flex items-center gap-2 mb-2">
                                     <div className="text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded flex items-center gap-1">
                                         <Zap size={8} fill="currentColor"/> Diario
@@ -318,12 +319,13 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
                                 <div className={`text-5xl font-mono font-black tracking-widest ${isPending ? 'text-yellow-500' : (sticker.isSupercharged ? 'text-amber-400' : 'text-white')} group-hover:text-brand-400 transition-colors shadow-black drop-shadow-sm`}>
                                     {sticker.numbers}
                                 </div>
+                                <div className="text-slate-400 font-bold text-lg mt-1">{formatMoney(price || 0)}</div>
                                 <div className="text-[10px] text-slate-500 mt-2 flex items-center gap-1">
                                     <Calendar size={10}/> {new Date(sticker.purchasedAt).toLocaleDateString()} {new Date(sticker.purchasedAt).toLocaleTimeString()}
                                 </div>
                                 {isPending && (
                                     <div className="text-[9px] text-red-400 mt-1 flex items-center gap-1">
-                                        <Clock size={10} /> {formatMoney(sticker.price)} - Expira en 1 hora
+                                        <Clock size={10} /> Expira en 1 hora
                                     </div>
                                 )}
                             </div>
@@ -336,7 +338,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
                                                 <button onClick={() => setPaymentOptionsVisible(null)} className='absolute -top-1.5 -right-1.5 bg-red-500 rounded-full p-0.5 z-20'><X size={12}/></button>
                                                 <button 
                                                     onClick={() => handlePayWithWallet(sticker)} 
-                                                    disabled={loading || walletBalance < sticker.price}
+                                                    disabled={loading || walletBalance < (price || 0)}
                                                     className='w-full flex-1 bg-green-500 text-navy-950 rounded-md text-[10px] font-black disabled:bg-gray-500 disabled:opacity-50'
                                                 >CON SALDO</button>
                                                 <button onClick={() => handlePayWithMercadoPago(sticker)} className='w-full flex-1 bg-blue-500 text-white rounded-md text-[10px] font-black'>MERCADO PAGO</button>
@@ -363,7 +365,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
                             </div>
                         </div>
                     </div>
-                    {sticker.isSupercharged && settings?.superchargePrizeImage && (
+                    {sticker.isSupercharged === true && settings?.superchargePrizeImage && (
                         <img 
                             src={settings.superchargePrizeImage} 
                             alt="Potenciado" 

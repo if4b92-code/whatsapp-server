@@ -15,6 +15,14 @@ const DEFAULT_SETTINGS: GlobalSettings = {
   adminWhatsApp: '573001234567'
 };
 
+const toSticker = (s: any): Sticker => {
+    const isSupercharged = s.is_supercharged === true || s.is_supercharged === 'true';
+    return {
+        ...s,
+        isSupercharged,
+    } as Sticker;
+}
+
 export const dbService = {
   addLotteryResult: async (result: LotteryResult): Promise<LotteryResult | null> => {
     if (!isCloudEnabled || !supabase) return null;
@@ -251,7 +259,7 @@ export const dbService = {
       return [];
     }
 
-    return data as Sticker[];
+    return data.map(toSticker);
   },
 
     getStickersByPhone: async (phoneNumber: string): Promise<Sticker[]> => {
@@ -267,7 +275,7 @@ export const dbService = {
       return [];
     }
 
-    return data.map(s => ({...s, isSupercharged: s.is_supercharged})) as Sticker[];
+    return data.map(toSticker);
   },
 
   getTopBuyers: async (): Promise<{ docId: string, name: string, count: number }[]> => {
@@ -311,7 +319,8 @@ export const dbService = {
     const { data, error } = await supabase
       .from('stickers')
       .insert(newStickerPayload)
-      .select();
+      .select('*, is_supercharged')
+      .single();
 
     if (error) {
       console.error("Error creating pending ticket:", error);
@@ -319,13 +328,7 @@ export const dbService = {
       return { success: false, message: "Error creating ticket" };
     }
     
-    const resultSticker = data[0];
-    const stickerToReturn: Sticker = {
-        ...resultSticker,
-        isSupercharged: resultSticker.is_supercharged
-    };
-
-    return { success: true, message: "Ticket generado", sticker: stickerToReturn };
+    return { success: true, message: "Ticket generado", sticker: toSticker(data) };
   },
 
   approveTicketManually: async (stickerId: string) => {
@@ -358,7 +361,7 @@ export const dbService = {
       return null;
     }
 
-    return {...data, isSupercharged: data.is_supercharged} as Sticker;
+    return toSticker(data);
   },
 
   updateStickerOwner: async (stickerId: string, ownerData: Partial<OwnerData>) => {
