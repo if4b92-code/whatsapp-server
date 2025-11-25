@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
 import { paymentService } from '../services/paymentService';
 import { GlobalSettings, Sticker } from '../types';
-import { AlertTriangle, Dices, Trash2, ShieldCheck, ArrowLeft, ArrowRight, CreditCard, User, Phone, CheckCircle, Wallet, Zap } from 'lucide-react';
+import { AlertTriangle, Dices, Trash2, ShieldCheck, ArrowLeft, ArrowRight, CreditCard, User, Phone, CheckCircle, Wallet, Zap, Keyboard } from 'lucide-react';
 
 interface Props {
   onSuccess: (stickerCode: string) => void;
@@ -386,7 +386,7 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
          ) : (
             <div className="space-y-3">
                  <div className="flex items-center justify-center gap-3">
-                    <button onClick={handleClear} className="text-red-400/80 font-bold p-3 rounded-lg flex items-center justify-center hover:text-red-400 transition-colors text-xs uppercase gap-1"><Trash2 size={16} /> Limpiar</button>
+                    <button onClick={handleClear} className="text-slate-400 font-bold p-3 rounded-lg flex items-center justify-center hover:text-white transition-colors text-xs uppercase gap-1"><Keyboard size={16} /> Digitar</button>
                     <span className="text-slate-600">|</span>
                     <button onClick={handleRandom} className="text-amber-400/80 font-bold p-3 rounded-lg flex items-center justify-center hover:text-amber-400 transition-colors text-xs uppercase gap-1"><Dices size={16} /> Aleatorio</button>
                 </div>
