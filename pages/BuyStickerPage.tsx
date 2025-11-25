@@ -314,22 +314,11 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
                     </p>
                 )}
             </div>
-            
-            <div className={`w-full max-w-sm mx-auto bg-navy-900 p-6 rounded-2xl border-2 ${error ? 'border-red-500/50' : 'border-navy-800'} flex flex-col items-center justify-center relative shadow-inner mb-4`}>
-                <div className="text-6xl font-mono font-bold tracking-[0.3em] text-white min-h-[4rem] z-10">
-                    {loading ? <div className="animate-pulse text-white/20">----</div> : numbers.padEnd(4, ' ')}
-                </div>
-                {error && (
-                    <div className="absolute -bottom-8 left-0 right-0 flex items-center justify-center gap-1 text-red-400 text-xs font-bold animate-pulse">
-                        <AlertTriangle size={12} /> {error}
-                    </div>
-                )}
-            </div>
 
-           {settings.superchargeMultiplier > 1 && (
+            {settings.superchargeMultiplier > 1 && (
                 <button 
                     onClick={() => setIsSupercharged(!isSupercharged)}
-                    className={`w-full max-w-sm mx-auto rounded-lg transition-all active:scale-95 disabled:opacity-50 mb-3 overflow-hidden ${isSupercharged ? 'bg-amber-400 text-navy-950' : 'bg-navy-800 text-amber-400'}`}
+                    className={`w-full max-w-sm mx-auto rounded-lg transition-all active:scale-95 disabled:opacity-50 mb-4 overflow-hidden ${isSupercharged ? 'bg-amber-400 text-navy-950' : 'bg-navy-800 text-amber-400'}`}
                 >
                     <div className="flex items-center justify-between p-3">
                         <Zap size={24} className="-ml-1" />
@@ -343,6 +332,32 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
                     </div>
                 </button>
             )}
+
+            <div className={`w-full max-w-sm mx-auto flex flex-col items-center justify-center relative mb-4`}>
+                <div className="flex items-center justify-center gap-3">
+                    {loading ? (
+                        [...Array(4)].map((_, i) => (
+                            <div key={i} className="w-16 h-20 bg-navy-900 rounded-xl flex items-center justify-center animate-pulse">
+                                <div className="w-4 h-4 bg-navy-700 rounded-full"></div>
+                            </div>
+                        ))
+                    ) : (
+                        [...Array(4)].map((_, i) => (
+                            <div key={i} className={`w-16 h-20 bg-navy-900 rounded-xl flex items-center justify-center border-2 ${error ? 'border-red-500/50' : 'border-navy-800'} shadow-inner`}>
+                                <span className={`text-5xl font-mono font-bold ${numbers[i] ? 'text-white' : 'text-navy-700'}`}>
+                                    {numbers[i] || '-'}
+                                </span>
+                            </div>
+                        ))
+                    )}
+                </div>
+                {error && (
+                    <div className="absolute -bottom-6 left-0 right-0 flex items-center justify-center gap-1 text-red-400 text-xs font-bold">
+                        <AlertTriangle size={12} /> {error}
+                    </div>
+                )}
+            </div>
+
         </div>
 
       <div className="w-full max-w-sm mx-auto">
