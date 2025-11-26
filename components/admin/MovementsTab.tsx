@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../services/client';
+import { MessageCircle } from 'lucide-react';
 
 interface Movement {
   id: number;
@@ -30,7 +31,8 @@ export const MovementsTab: React.FC = () => {
     if (error) {
       console.error('Error fetching movements:', error);
     } else {
-      setMovements(data as Movement[]);
+      const sortedData = (data as Movement[]).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setMovements(sortedData);
     }
     setLoading(false);
   };
@@ -94,14 +96,30 @@ export const MovementsTab: React.FC = () => {
     } else if (movement.action === 'WALLET_PURCHASE') {
         message = `Hola, se ha confirmado tu compra con wallet. ¡Gracias por participar!`;
     } else {
-        message = `Hola, se ha registrado un nuevo movimiento en tu cuenta:
-        - ${getMovementDescription(movement)}
-        - Fecha: ${new Date(movement.created_at).toLocaleString()}`;
+        message = `Hola, se ha registrado un nuevo movimiento en tu cuenta:\n        - ${getMovementDescription(movement)}\n        - Fecha: ${new Date(movement.created_at).toLocaleString()}`;
     }
 
     const whatsappUrl = `https://wa.me/${userPhoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
+
+    if (!supabase) return;
+    const { error } = await supabase
+        .from('movements')
+        .delete()
+        .eq('id', movement.id);
+
+    if (error) {
+        console.error('Error deleting movement:', error);
+        alert('Error al eliminar el movimiento.');
+    } else {
+        setMovements(prevMovements => prevMovements.filter(m => m.id !== movement.id));
+    }
   };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}, ${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+  }
 
   if (loading) {
     return <div className="text-white">Cargando movimientos...</div>;
@@ -111,28 +129,30 @@ export const MovementsTab: React.FC = () => {
     <div className="space-y-4">
       <h3 className="text-xl font-bold text-white">Registro de Movimientos</h3>
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm text-left text-gray-400">
+        <table className="w-full text-sm text-left text-gray-400">
           <thead className="text-xs text-gray-300 uppercase bg-navy-800">
             <tr>
-              <th scope="col" className="px-6 py-3">Descripción</th>
-              <th scope="col" className="px-6 py-3">Usuario</th>
-              <th scope="col" className="px-6 py-3">Fecha</th>
-              <th scope="col" className="px-6 py-3">Notificar</th>
+              <th scope="col" className="px-4 py-3">Descripción</th>
+              <th scope="col" className="px-4 py-3">Fecha</th>
+              <th scope="col" className="px-4 py-3 text-center">Acción</th>
             </tr>
           </thead>
           <tbody>
             {movements.map((movement) => (
-              <tr key={movement.id} className="bg-navy-900 border-b border-navy-800">
-                <td className="px-6 py-4">{getMovementDescription(movement)}</td>
-                <td className="px-6 py-4">{movement.user_id}</td>
-                <td className="px-6 py-4">{new Date(movement.created_at).toLocaleString()}</td>
-                <td className="px-6 py-4">
-                  <button
-                    onClick={() => sendWhatsAppMessage(movement)}
-                    className="px-3 py-1 text-xs font-bold text-white bg-green-500 rounded-lg hover:bg-green-600"
-                  >
-                    Notificar
-                  </button>
+              <tr key={movement.id} className="border-b border-navy-800 bg-navy-900">
+                <td className="px-4 py-4">
+                    <p className="font-medium text-white">{getMovementDescription(movement)}</p>
+                    <p className="text-xs text-gray-500">{movement.user_id}</p>
+                </td>
+                <td className="px-4 py-4 text-xs">{formatDate(movement.created_at)}</td>
+                <td className="px-4 py-4 text-center">
+                    <button
+                        onClick={() => sendWhatsAppMessage(movement)}
+                        className="px-3 py-2 text-xs font-bold text-white bg-green-500 rounded-lg hover:bg-green-600 flex items-center gap-1.5 mx-auto"
+                    >
+                        <MessageCircle size={14} />
+                        Notificar
+                    </button>
                 </td>
               </tr>
             ))}
