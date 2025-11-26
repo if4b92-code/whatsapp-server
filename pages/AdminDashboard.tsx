@@ -8,13 +8,14 @@ import { UsersTab } from '../components/admin/UsersTab';
 import { TopBuyersTab } from '../components/admin/TopBuyersTab';
 import { LotteriesTab } from '../components/admin/LotteriesTab';
 import { SettingsTab } from '../components/admin/SettingsTab';
+import { MovementsTab } from '../components/admin/MovementsTab';
 
 export const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [settings, setSettings] = useState<GlobalSettings | null>(null);
   const [topBuyers, setTopBuyers] = useState<{docId: string, name: string, count: number}[]>([]);
-  const [activeTab, setActiveTab] = useState<'sales' | 'users' | 'top_buyers' | 'config' | 'lotteries'>('sales');
+  const [activeTab, setActiveTab] = useState<'sales' | 'users' | 'top_buyers' | 'config' | 'lotteries' | 'movements'>('sales');
   const [loading, setLoading] = useState(false);
   const [raffleWinner, setRaffleWinner] = useState<Sticker | null>(null);
   const [rafflePrize, setRafflePrize] = useState(0);
@@ -93,6 +94,7 @@ export const AdminDashboard: React.FC = () => {
           {activeTab === 'top_buyers' && <TopBuyersTab topBuyers={topBuyers} />}
           {activeTab === 'lotteries' && <LotteriesTab stickers={stickers} settings={settings} loadData={loadData} />}
           {activeTab === 'config' && settings && <SettingsTab initialSettings={settings} />}
+          {activeTab === 'movements' && <MovementsTab />}
         </>
       )}
     </AdminLayout>

@@ -211,6 +211,13 @@ export const dbService = {
       await supabase.from('wallets').update({ balance: walletData.balance }).eq('phone', phone);
       return { success: false, message: 'Error al activar el ticket. Se ha devuelto el saldo.' };
     }
+
+    // Log the custom wallet purchase event
+    await supabase.from('movements').insert({
+        table_name: 'wallets',
+        action: 'WALLET_PURCHASE',
+        data: { phone, stickerId, amount },
+    });
     
     return { success: true, message: 'Pago completado con éxito.' };
   },
@@ -227,6 +234,13 @@ export const dbService = {
       console.error("Error generating access code:", error);
       return '';
     }
+
+    // Log the custom verification code event
+    await supabase.from('movements').insert({
+        table_name: 'user_access_codes',
+        action: 'VERIFICATION_CODE',
+        data: { phone, code },
+    });
 
     return code;
   },

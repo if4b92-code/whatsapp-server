@@ -9,7 +9,7 @@ interface AdminLayoutProps {
   onLogout: () => void;
   children: ReactNode;
   activeTab: string;
-  setActiveTab: (tab: 'sales' | 'users' | 'top_buyers' | 'config' | 'lotteries') => void;
+  setActiveTab: (tab: 'sales' | 'users' | 'top_buyers' | 'config' | 'lotteries' | 'movements') => void;
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({
@@ -103,6 +103,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         <button onClick={() => setActiveTab('top_buyers')} className={`flex-1 min-w-[70px] py-2 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wide ${activeTab === 'top_buyers' ? 'bg-brand-500 text-navy-950' : 'text-slate-400'}`}>Líderes</button>
         <button onClick={() => setActiveTab('lotteries')} className={`flex-1 min-w-[70px] py-2 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wide ${activeTab === 'lotteries' ? 'bg-brand-500 text-navy-950' : 'text-slate-400'}`}>Loterías</button>
         <button onClick={() => setActiveTab('config')} className={`flex-1 min-w-[70px] py-2 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wide ${activeTab === 'config' ? 'bg-brand-500 text-navy-950' : 'text-slate-400'}`}>Ajustes</button>
+        <button onClick={() => setActiveTab('movements')} className={`flex-1 min-w-[70px] py-2 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wide ${activeTab === 'movements' ? 'bg-brand-500 text-navy-950' : 'text-slate-400'}`}>Movimientos</button>
       </div>
       {children}
     </div>
