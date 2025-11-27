@@ -16,13 +16,8 @@ export const MovementsTab: React.FC = () => {
   const [movements, setMovements] = useState<Movement[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchMovements();
-  }, []);
-
   const fetchMovements = async () => {
     if (!supabase) return;
-    setLoading(true);
     const { data, error } = await supabase
       .from('movements')
       .select('*')
@@ -31,11 +26,23 @@ export const MovementsTab: React.FC = () => {
     if (error) {
       console.error('Error fetching movements:', error);
     } else {
-      const sortedData = (data as Movement[]).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      setMovements(sortedData);
+      setMovements(data as Movement[]);
     }
-    setLoading(false);
   };
+
+  useEffect(() => {
+    const initialFetch = async () => {
+      setLoading(true);
+      await fetchMovements();
+      setLoading(false);
+    };
+
+    initialFetch();
+
+    const interval = setInterval(fetchMovements, 2000); // Refresh every 2 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   const getMovementDescription = (movement: Movement): string => {
     switch (movement.action) {
@@ -89,14 +96,24 @@ export const MovementsTab: React.FC = () => {
         return;
     }
 
-    let message = 'Hola, se ha registrado un nuevo movimiento en tu cuenta:';
+    let message = 'Hola, se ha registrado un nuevo movimiento en tu cuenta.';
+    const today = new Date();
+    const verificationDate = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
+
 
     if (movement.action === 'VERIFICATION_CODE') {
-        message = `Hola, tu código de acceso para Mis Tickets es: ${movement.data.code}`;
-    } else if (movement.action === 'WALLET_PURCHASE') {
-        message = `Hola, se ha confirmado tu compra con wallet. ¡Gracias por participar!`;
+        message = `¡Código de Acceso a GanarApp! 🔐\n\nTu código de verificación es: *${movement.data.code}*\n\nÚsalo para iniciar sesión de forma segura.`;
+    } else if (movement.action === 'UPDATE' && movement.table_name === 'stickers' && movement.data.new.status === 'active') {
+        const ticketNumber = movement.data.new.numbers;
+        const verificationCode = `GA-${verificationDate}-${ticketNumber}`;
+        message = `¡Tu compra ha sido exitosa! 🚀\n\nNúmero: *${ticketNumber}*\nCódigo de Verificación: *${verificationCode}*\n\nGracias por jugar en GanarApp. ¡Mucha suerte! 🍀`;
+    } else if (movement.action === 'INSERT' && movement.table_name === 'stickers') {
+        message = `¡Número apartado en GanarApp! ⏳\n\nHas apartado el número: *${movement.data.new.numbers}*\n\nRecuerda realizar el pago para confirmar tu participación.`;
+    } else if (movement.action === 'UPDATE' && movement.table_name === 'wallets') {
+        const balanceChange = movement.data.new.balance - movement.data.old.balance;
+        message = `¡Recarga Exitosa! 💳\n\nSe ha añadido un saldo de *${balanceChange}* a tu wallet.\nTu nuevo saldo es: *${movement.data.new.balance}*\n\n¡Gracias por confiar en GanarApp!`;
     } else {
-        message = `Hola, se ha registrado un nuevo movimiento en tu cuenta:\n        - ${getMovementDescription(movement)}\n        - Fecha: ${new Date(movement.created_at).toLocaleString()}`;
+        message = `Hola, se ha registrado un nuevo movimiento en tu cuenta:\n- *${getMovementDescription(movement)}*\n- Fecha: ${new Date(movement.created_at).toLocaleString()}`;
     }
 
     const whatsappUrl = `https://wa.me/${userPhoneNumber}?text=${encodeURIComponent(message)}`;
