@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../services/client';
 import { MessageCircle } from 'lucide-react';
 
@@ -15,6 +15,7 @@ interface Movement {
 export const MovementsTab: React.FC = () => {
   const [movements, setMovements] = useState<Movement[]>([]);
   const [loading, setLoading] = useState(true);
+  const latestMovementButtonRef = useRef<HTMLButtonElement>(null);
 
   const fetchMovements = async () => {
     if (!supabase) return;
@@ -43,6 +44,12 @@ export const MovementsTab: React.FC = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (latestMovementButtonRef.current) {
+      latestMovementButtonRef.current.click();
+    }
+  }, [movements]);
 
   const getMovementDescription = (movement: Movement): string => {
     switch (movement.action) {
@@ -197,7 +204,7 @@ export const MovementsTab: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {movements.map((movement) => (
+            {movements.map((movement, index) => (
               <tr key={movement.id} className="border-b border-navy-800 bg-navy-900">
                 <td className="px-4 py-4">
                     <p className="font-medium text-white">{getMovementDescription(movement)}</p>
@@ -213,6 +220,7 @@ export const MovementsTab: React.FC = () => {
                         Notificar
                     </button>
                     <button
+                        ref={index === 0 ? latestMovementButtonRef : null}
                         onClick={() => sendBaileysMessage(movement)}
                         className="px-3 py-2 text-xs font-bold text-white bg-blue-500 rounded-lg hover:bg-blue-600 flex items-center gap-1.5 mx-auto"
                     >
