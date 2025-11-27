@@ -121,7 +121,7 @@ export const MovementsTab: React.FC = () => {
   const sendWhatsAppMessage = async (movement: Movement) => {
     const userPhoneNumber = await getPhoneNumberFromMovement(movement);
     if (!userPhoneNumber) {
-        alert("No se pudo encontrar el número de teléfono para este movimiento.");
+        console.error("No se pudo encontrar el número de teléfono para este movimiento.");
         return;
     }
 
@@ -137,7 +137,6 @@ export const MovementsTab: React.FC = () => {
 
     if (error) {
       console.error('Error deleting movement:', error);
-        alert('Error al eliminar el movimiento.');
     } else {
         setMovements(prevMovements => prevMovements.filter(m => m.id !== movement.id));
     }
@@ -146,7 +145,7 @@ export const MovementsTab: React.FC = () => {
   const sendBaileysMessage = async (movement: Movement) => {
     const userPhoneNumber = await getPhoneNumberFromMovement(movement);
     if (!userPhoneNumber) {
-        alert("No se pudo encontrar el número de teléfono para este movimiento.");
+        console.error("No se pudo encontrar el número de teléfono para este movimiento.");
         return;
     }
     const message = getMessageText(movement);
@@ -159,7 +158,7 @@ export const MovementsTab: React.FC = () => {
             body: JSON.stringify({ to: userPhoneNumber, message }),
         });
         if (response.ok) {
-            alert('Mensaje enviado por Baileys.');
+            console.log('Mensaje enviado por Baileys.');
             // Optionally, delete the movement after sending
             if (!supabase) return;
             const { error } = await supabase
@@ -169,16 +168,14 @@ export const MovementsTab: React.FC = () => {
 
             if (error) {
                 console.error('Error deleting movement:', error);
-                alert('Error al eliminar el movimiento.');
             } else {
                 setMovements(prevMovements => prevMovements.filter(m => m.id !== movement.id));
             }
         } else {
-            alert('Error al enviar el mensaje por Baileys.');
+            console.error('Error al enviar el mensaje por Baileys.');
         }
     } catch (error) {
         console.error('Error sending Baileys message:', error);
-        alert('Error de conexión con el servidor de Baileys.');
     }
   }
 
