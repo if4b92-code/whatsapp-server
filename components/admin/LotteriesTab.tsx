@@ -94,6 +94,34 @@ const handleSendWhatsAppNotification = (info: NotificationInfo) => {
     window.open(url, '_blank');
 }
 
+const handleSendBaileysNotification = async (info: NotificationInfo) => {
+    if (!info.phone) {
+        alert("No se encontró el número de teléfono.");
+        return;
+    }
+
+    const cleanPhone = info.phone.replace(/\+/g, '');
+    const message = `¡Felicidades ${info.name}! 🎉\n\nHas ganado el sorteo de GanarApp con el número *${info.winningNumber}*.\n\n*Premio Ganado:* ${formatMoney(info.prizeAmount)}\n\n¡Contáctanos a este número para reclamar tu premio!`;
+
+    try {
+        const response = await fetch('http://localhost:3001/send-message', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ to: cleanPhone, message }),
+        });
+        if (response.ok) {
+            alert('Mensaje de felicitación enviado por Baileys.');
+        } else {
+            alert('Error al enviar el mensaje por Baileys.');
+        }
+    } catch (error) {
+        console.error('Error sending Baileys message:', error);
+        alert('Error de conexión con el servidor de Baileys.');
+    }
+}
+
 
   return (
     <div className="space-y-4">
@@ -143,6 +171,20 @@ const handleSendWhatsAppNotification = (info: NotificationInfo) => {
                 >
                     <MessageCircle size={16} /> Notificar Ganador por WhatsApp
                 </button>
+                <button
+                    onClick={() => {
+                        if (!lotteryWinner) return;
+                        handleSendBaileysNotification({
+                            name: lotteryWinner.ownerData.fullName,
+                            phone: lotteryWinner.ownerData.phone,
+                            winningNumber: lotteryWinner.numbers,
+                            prizeAmount: settings?.dailyPrizeAmount || 0
+                        });
+                    }}
+                    className="mt-2 w-full bg-blue-500 hover:bg-blue-400 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2"
+                >
+                    <MessageCircle size={16} /> Enviar por Baileys (Prueba)
+                </button>
             </div>
         )}
 
@@ -172,6 +214,7 @@ const handleSendWhatsAppNotification = (info: NotificationInfo) => {
                                         <p className="text-sm text-white">{result.winnerInfo.name}</p>
                                         <p className="text-sm text-slate-400 font-mono">{result.winnerInfo.phone}</p>
                                     </div>
+                                    <div className="flex flex-col">
                                     <button
                                         onClick={() => {
                                             if (!result.winnerInfo) return;
@@ -186,6 +229,21 @@ const handleSendWhatsAppNotification = (info: NotificationInfo) => {
                                     >
                                         <MessageCircle size={14} /> Notificar
                                     </button>
+                                    <button
+                                        onClick={() => {
+                                            if (!result.winnerInfo) return;
+                                            handleSendBaileysNotification({
+                                                name: result.winnerInfo.name,
+                                                phone: result.winnerInfo.phone,
+                                                winningNumber: result.winningNumber,
+                                                prizeAmount: result.prizeAmount
+                                            });
+                                        }}
+                                        className="bg-blue-500/80 hover:bg-blue-500 text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1.5 shrink-0 mt-2"
+                                    >
+                                        <MessageCircle size={14} /> Baileys
+                                    </button>
+                                    </div>
                                 </div>
                             </div>
                         ) : (

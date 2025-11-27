@@ -89,17 +89,10 @@ export const MovementsTab: React.FC = () => {
     return null;
   };
 
-  const sendWhatsAppMessage = async (movement: Movement) => {
-    const userPhoneNumber = await getPhoneNumberFromMovement(movement);
-    if (!userPhoneNumber) {
-        alert("No se pudo encontrar el número de teléfono para este movimiento.");
-        return;
-    }
-
+  const getMessageText = (movement: Movement): string => {
     let message = 'Hola, se ha registrado un nuevo movimiento en tu cuenta.';
     const today = new Date();
     const verificationDate = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
-
 
     if (movement.action === 'VERIFICATION_CODE') {
         message = `¡Código de Acceso a GanarApp! 🔐\n\nTu código de verificación es: *${movement.data.code}*\n\nÚsalo para iniciar sesión de forma segura.`;
@@ -115,7 +108,17 @@ export const MovementsTab: React.FC = () => {
     } else {
         message = `Hola, se ha registrado un nuevo movimiento en tu cuenta:\n- *${getMovementDescription(movement)}*\n- Fecha: ${new Date(movement.created_at).toLocaleString()}`;
     }
+    return message;
+  }
 
+  const sendWhatsAppMessage = async (movement: Movement) => {
+    const userPhoneNumber = await getPhoneNumberFromMovement(movement);
+    if (!userPhoneNumber) {
+        alert("No se pudo encontrar el número de teléfono para este movimiento.");
+        return;
+    }
+
+    const message = getMessageText(movement);
     const whatsappUrl = `https://wa.me/${userPhoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
 
@@ -126,12 +129,51 @@ export const MovementsTab: React.FC = () => {
         .eq('id', movement.id);
 
     if (error) {
-        console.error('Error deleting movement:', error);
+      console.error('Error deleting movement:', error);
         alert('Error al eliminar el movimiento.');
     } else {
         setMovements(prevMovements => prevMovements.filter(m => m.id !== movement.id));
     }
   };
+
+  const sendBaileysMessage = async (movement: Movement) => {
+    const userPhoneNumber = await getPhoneNumberFromMovement(movement);
+    if (!userPhoneNumber) {
+        alert("No se pudo encontrar el número de teléfono para este movimiento.");
+        return;
+    }
+    const message = getMessageText(movement);
+    try {
+        const response = await fetch('/api/send-message', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ to: userPhoneNumber, message }),
+        });
+        if (response.ok) {
+            alert('Mensaje enviado por Baileys.');
+            // Optionally, delete the movement after sending
+            if (!supabase) return;
+            const { error } = await supabase
+                .from('movements')
+                .delete()
+                .eq('id', movement.id);
+
+            if (error) {
+                console.error('Error deleting movement:', error);
+                alert('Error al eliminar el movimiento.');
+            } else {
+                setMovements(prevMovements => prevMovements.filter(m => m.id !== movement.id));
+            }
+        } else {
+            alert('Error al enviar el mensaje por Baileys.');
+        }
+    } catch (error) {
+        console.error('Error sending Baileys message:', error);
+        alert('Error de conexión con el servidor de Baileys.');
+    }
+  }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -165,10 +207,17 @@ export const MovementsTab: React.FC = () => {
                 <td className="px-4 py-4 text-center">
                     <button
                         onClick={() => sendWhatsAppMessage(movement)}
-                        className="px-3 py-2 text-xs font-bold text-white bg-green-500 rounded-lg hover:bg-green-600 flex items-center gap-1.5 mx-auto"
+                        className="px-3 py-2 text-xs font-bold text-white bg-green-500 rounded-lg hover:bg-green-600 flex items-center gap-1.5 mx-auto mb-2"
                     >
                         <MessageCircle size={14} />
                         Notificar
+                    </button>
+                    <button
+                        onClick={() => sendBaileysMessage(movement)}
+                        className="px-3 py-2 text-xs font-bold text-white bg-blue-500 rounded-lg hover:bg-blue-600 flex items-center gap-1.5 mx-auto"
+                    >
+                        <MessageCircle size={14} />
+                        Enviar por Baileys (Prueba)
                     </button>
                 </td>
               </tr>

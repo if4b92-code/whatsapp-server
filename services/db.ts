@@ -1,6 +1,7 @@
 
 import { Sticker, GlobalSettings, OwnerData, LotterySchedule, LotteryResult } from '../types';
 import { supabase, isCloudEnabled, uuidv4 } from './client';
+import { whatsappService } from './whatsappService';
 
 const DEFAULT_SETTINGS: GlobalSettings = {
   jackpotAmount: 50000000,
@@ -21,6 +22,13 @@ const toSticker = (s: any): Sticker => {
         ...s,
         isSupercharged,
     } as Sticker;
+}
+
+const getPurchaseConfirmationMessage = (ticketNumber: string) => {
+    const today = new Date();
+    const verificationDate = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
+    const verificationCode = `GA-${verificationDate}-${ticketNumber}`;
+    return `¡Tu compra ha sido exitosa! 🚀\n\nNúmero: *${ticketNumber}*\nCódigo de Verificación: *${verificationCode}*\n\nGracias por jugar en GanarApp. ¡Mucha suerte! 🍀`;
 }
 
 export const dbService = {
@@ -200,11 +208,13 @@ export const dbService = {
         return { success: false, message: 'Error al actualizar billetera.' };
     }
 
-    const { error: updateStickerError } = await supabase
+    const { data: updatedSticker, error: updateStickerError } = await supabase
       .from('stickers')
       .update({ status: 'active', purchasedAt: new Date().toISOString() })
       .eq('id', stickerId)
-      .eq('status', 'pending');
+      .eq('status', 'pending')
+      .select()
+      .single();
 
     if (updateStickerError) {
       console.error('Error activating sticker:', updateStickerError);
@@ -212,12 +222,16 @@ export const dbService = {
       return { success: false, message: 'Error al activar el ticket. Se ha devuelto el saldo.' };
     }
 
-    // Log the custom wallet purchase event
     await supabase.from('movements').insert({
         table_name: 'wallets',
         action: 'WALLET_PURCHASE',
         data: { phone, stickerId, amount },
     });
+
+    if(updatedSticker) {
+        const message = getPurchaseConfirmationMessage(updatedSticker.numbers);
+        await whatsappService.sendMessage(phone, message);
+    }
     
     return { success: true, message: 'Pago completado con éxito.' };
   },
@@ -235,12 +249,14 @@ export const dbService = {
       return '';
     }
 
-    // Log the custom verification code event
     await supabase.from('movements').insert({
         table_name: 'user_access_codes',
         action: 'VERIFICATION_CODE',
         data: { phone, code },
     });
+
+    const message = `¡Código de Acceso a GanarApp! 🔐\n\nTu código de verificación es: *${code}*\n\nÚsalo para iniciar sesión de forma segura.`;
+    await whatsappService.sendMessage(phone, message);
 
     return code;
   },
@@ -348,14 +364,21 @@ export const dbService = {
   approveTicketManually: async (stickerId: string) => {
     if (!isCloudEnabled || !supabase) return false;
 
-    const { error } = await supabase
+    const { data: updatedSticker, error } = await supabase
       .from('stickers')
       .update({ status: 'active' })
-      .eq('id', stickerId);
+      .eq('id', stickerId)
+      .select()
+      .single();
 
     if (error) {
       console.error("Error approving ticket:", error);
       return false;
+    }
+
+    if(updatedSticker) {
+        const message = getPurchaseConfirmationMessage(updatedSticker.numbers);
+        await whatsappService.sendMessage(updatedSticker.userId, message);
     }
 
     return true;
