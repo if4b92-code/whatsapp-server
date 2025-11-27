@@ -109,20 +109,37 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
             <div className="bg-amber-400 p-2 text-center shadow-lg relative z-10">
                 <h1 className="text-slate-900 font-black uppercase tracking-wider text-xs flex items-center justify-center gap-2">
                     <Star size={14} className="text-slate-900/50" />
-                    ¡4 OPORTUNIDADES DE APOYAR!
+                    ¡7 OPORTUNIDADES!
                     <Star size={14} className="text-slate-900/50" />
                 </h1>
             </div>
 
             <div className="p-6 flex flex-col items-center text-center relative z-10">
-                
-                <div className="mb-6 w-full">
-                    <div className="text-[10px] text-amber-300 font-bold uppercase tracking-widest mb-1">Gran Ticket de Oro Semanal</div>
-                    <div className="text-4xl font-black text-white tracking-tighter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] font-mono">
-                        {formatMoney(settings.jackpotAmount)}
+
+                <div className="mb-6 w-full flex flex-col justify-around items-center">
+                    {/* Daily Prize */}
+                    <div className="flex-1 text-center px-2">
+                        <div className="text-xs text-blue-300 font-bold uppercase tracking-widest mb-1">PREMIO DE HOY</div>
+                        <div className="text-4xl font-black text-white tracking-tight drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] font-mono">
+                            {formatMoney(settings.dailyPrizeAmount)}
+                        </div>
+                        <div className="text-sm font-bold text-slate-300 mt-1">
+                           + ¡El Elegido!
+                        </div>
                     </div>
-                    <div className="text-sm font-bold text-green-300 bg-green-500/10 px-3 py-1 rounded-full inline-block mt-2 border border-green-500/20">
-                        + {formatMoney(settings.accumulatedPool)} Donación al Azar
+
+                    {/* Separator */}
+                    <div className="h-px w-20 bg-white/20 my-4"></div>
+
+                    {/* Saturday Jackpot */}
+                    <div className="flex-1 text-center px-2">
+                        <div className="text-xs text-amber-300 font-bold uppercase tracking-widest mb-1">GRAN ACUMULADO SÁBADO</div>
+                        <div className="text-4xl font-black text-white tracking-tight drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] font-mono">
+                            {formatMoney(settings.jackpotAmount)}
+                        </div>
+                        <div className="text-sm font-bold text-green-300 mt-1">
+                           + Donación al Azar
+                        </div>
                     </div>
                 </div>
 
