@@ -20,13 +20,13 @@ export const MovementsTab: React.FC = () => {
     if (!supabase) return;
     const { data, error } = await supabase
       .from('movements')
-      .select('*')
-      .order('created_at', { descending: true });
+      .select('*');
 
     if (error) {
       console.error('Error fetching movements:', error);
     } else {
-      setMovements(data as Movement[]);
+      const sortedData = (data as Movement[]).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setMovements(sortedData);
     }
   };
 
