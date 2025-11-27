@@ -59,39 +59,45 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
       {settings.superchargePrizeName && (
         <div
           onClick={() => setIsSuperchargeActive(!isSuperchargeActive)}
-          className={`rounded-2xl p-4 border-2 transition-all duration-300 ease-in-out cursor-pointer group ${
+          className={`rounded-2xl overflow-hidden border-2 transition-all duration-300 ease-in-out cursor-pointer group ${
             isSuperchargeActive
               ? 'border-amber-400 bg-amber-900/20 shadow-[0_0_40px_rgba(250,204,21,0.3)]'
               : 'border-navy-700 bg-navy-800/30 hover:border-amber-500/50'
           }`}
         >
-          <div className="flex items-center">
-            {settings.superchargePrizeImage && (
-                <img src={settings.superchargePrizeImage} alt={settings.superchargePrizeName} className="w-24 h-auto rounded-md shadow-lg mr-4" />
-            )}
-            <div className="flex-grow">
-              <div className="flex items-center gap-3">
-                <Zap size={20} className={`transition-colors ${isSuperchargeActive ? 'text-amber-400' : 'text-slate-500 group-hover:text-amber-500'}`} />
-                <h2 className="text-lg font-bold text-white">
-                  Activar Supercharge x{settings.superchargeMultiplier}
-                </h2>
-              </div>
-              <p className="text-sm text-slate-400 pl-8">
-                ¡Participa por la <strong>{settings.superchargePrizeName}</strong> y más!
-              </p>
-              <p className="text-xs text-amber-400/80 font-semibold pl-8 mt-1">
-                (Juega el Sábado con el Acumulado)
-              </p>
-            </div>
-            <div className={`w-14 h-8 rounded-full flex items-center p-1 transition-colors ${isSuperchargeActive ? 'bg-amber-400' : 'bg-navy-700'}`}>
-              <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${isSuperchargeActive ? 'translate-x-6' : 'translate-x-0'}`}/>
-            </div>
-          </div>
-          {isSuperchargeActive && (
-            <div className="mt-4 text-center">
-              <p className="text-xs text-slate-300 font-medium">¡Genial! Con Supercharge activado, el valor de tu ticket es de <b className="text-white">{formatMoney(currentTicketPrice)}</b> y participas por premios increíbles.</p>
-            </div>
+          {/* Image takes full width at the top */}
+          {settings.superchargePrizeImage && (
+              <img src={settings.superchargePrizeImage} alt={settings.superchargePrizeName} className="w-full h-auto object-cover" />
           )}
+          
+          {/* Content below with padding */}
+          <div className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex-grow pr-4">
+                <div className="flex items-center gap-3">
+                  <Zap size={20} className={`transition-colors ${isSuperchargeActive ? 'text-amber-400' : 'text-slate-500 group-hover:text-amber-500'}`} />
+                  <h2 className="text-base md:text-lg font-bold text-white">
+                    Activar Supercharge x{settings.superchargeMultiplier}
+                  </h2>
+                </div>
+                <p className="text-xs md:text-sm text-slate-400 pl-8">
+                  ¡Participa por la <strong>{settings.superchargePrizeName}</strong> y más!
+                </p>
+                <p className="text-[10px] md:text-xs text-amber-400/80 font-semibold pl-8 mt-1">
+                  (Juega el Sábado con el Acumulado)
+                </p>
+              </div>
+              <div className={`w-14 h-8 flex-shrink-0 rounded-full flex items-center p-1 transition-colors ${isSuperchargeActive ? 'bg-amber-400' : 'bg-navy-700'}`}>
+                <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${isSuperchargeActive ? 'translate-x-6' : 'translate-x-0'}`}/>
+              </div>
+            </div>
+
+            {isSuperchargeActive && (
+              <div className="mt-4 text-center">
+                <p className="text-xs text-slate-300 font-medium">¡Genial! Con Supercharge activado, el valor de tu ticket es de <b className="text-white">{formatMoney(currentTicketPrice)}</b> y participas por premios increíbles.</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
