@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { dbService } from '../services/db';
 import { Sticker } from '../types';
@@ -6,9 +7,10 @@ import { ShieldCheck, AlertTriangle, User, Phone, FileText, Save, CheckCircle2 }
 interface Props {
   code: string;
   onHome: () => void;
+  onWallet: () => void;
 }
 
-export const VerifyTicketPage: React.FC<Props> = ({ code, onHome }) => {
+export const VerifyTicketPage: React.FC<Props> = ({ code, onHome, onWallet }) => {
   const [sticker, setSticker] = useState<Sticker | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -171,7 +173,7 @@ export const VerifyTicketPage: React.FC<Props> = ({ code, onHome }) => {
         </div>
 
         <div className="mt-8 text-center">
-            <button onClick={onHome} className="text-slate-500 hover:text-white text-sm font-bold underline">
+            <button onClick={onWallet} className="text-slate-500 hover:text-white text-sm font-bold underline">
                 Ir a la App Principal
             </button>
         </div>

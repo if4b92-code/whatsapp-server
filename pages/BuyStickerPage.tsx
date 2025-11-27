@@ -3,7 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
 import { paymentService } from '../services/paymentService';
 import { GlobalSettings, Sticker } from '../types';
-import { AlertTriangle, Dices, Trash2, ShieldCheck, ArrowLeft, ArrowRight, CreditCard, User, Phone, CheckCircle, Wallet, Zap, Keyboard } from 'lucide-react';
+import { NumberDisplay } from '../components/buy/NumberDisplay';
+import { NumberInput } from '../components/buy/NumberInput';
+import { UserInfoForm } from '../components/buy/UserInfoForm';
+import { Payment } from '../components/buy/Payment';
+import { Zap, ShieldCheck } from 'lucide-react';
 
 interface Props {
   onSuccess: (stickerCode: string) => void;
@@ -100,16 +104,14 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
     setStep('user_info');
   };
 
-  const createTicketAndProceed = async () => {
-      if (!userName || !phone) {
-          setError("Nombre y WhatsApp son obligatorios");
-          return;
-      }
+  const createTicketAndProceed = async (name: string, p: string) => {
+      setUserName(name);
+      setPhone(p);
       
       setLoading(true);
-      const fullPhone = `${countryCode}${phone}`;
+      const fullPhone = `${countryCode}${p}`;
       const result = await dbService.createPendingTicket(numbers, { 
-          fullName: userName, 
+          fullName: name, 
           phone: fullPhone, 
           countryCode 
       }, ticketPrice, isSupercharged);
@@ -160,155 +162,48 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
   
   if (step === 'user_info') {
       return (
-        <div className="space-y-6 animate-in slide-in-from-bottom-10 duration-300 h-full flex flex-col px-4">
-            <button onClick={() => setStep('select')} className="text-slate-400 hover:text-white flex items-center gap-1 text-sm font-bold">
-                <ArrowLeft size={16} /> Volver a Números
-            </button>
-
-            <div className="text-center mb-4">
-                <h2 className="text-2xl font-bold text-white">Tus Datos</h2>
-                <p className="text-slate-400 text-xs">Necesarios para vincular tu ticket <span className="text-amber-400 font-bold">#{numbers}</span></p>
-            </div>
-
-            <div className="space-y-4 bg-navy-900 p-5 rounded-2xl border border-white/5">
-                <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-slate-500 ml-1">Nombre Completo</label>
-                    <div className="relative">
-                        <User size={16} className="absolute left-3 top-3.5 text-slate-500" />
-                        <input 
-                            type="text" 
-                            required 
-                            value={userName} 
-                            onChange={e => setUserName(e.target.value)}
-                            className="w-full bg-navy-950 border border-white/10 rounded-xl py-3 pl-10 text-white text-sm focus:border-amber-500 outline-none"
-                            placeholder="Tu nombre"
-                        />
-                    </div>
-                </div>
-                
-                <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-slate-500 ml-1">WhatsApp / Celular</label>
-                    <div className="flex gap-2">
-                        <div className="relative w-24 shrink-0">
-                            <span className="absolute left-2 top-3.5 text-slate-500 text-xs">+</span>
-                            <input 
-                                type="text" 
-                                value={countryCode} 
-                                onChange={e => setCountryCode(e.target.value.replace(/\D/g,''))}
-                                className="w-full bg-navy-950 border border-white/10 rounded-xl py-3 pl-6 text-white text-sm text-center focus:border-amber-500 outline-none"
-                            />
-                        </div>
-                        <div className="relative flex-1">
-                            <Phone size={16} className="absolute left-3 top-3.5 text-slate-500" />
-                            <input 
-                                type="tel" 
-                                required 
-                                value={phone} 
-                                onChange={e => setPhone(e.target.value.replace(/\D/g,''))}
-                                className="w-full bg-navy-950 border border-white/10 rounded-xl py-3 pl-10 text-white text-sm focus:border-amber-500 outline-none"
-                                placeholder="Número"
-                            />
-                        </div>
-                    </div>
-                    <p className="text-[9px] text-slate-500 mt-1">Usaremos este número para que veas tus tickets.</p>
-                </div>
-            </div>
-
-            {error && <p className="text-red-500 text-center text-xs font-bold">{error}</p>}
-
-            <button 
-                onClick={createTicketAndProceed}
-                disabled={!userName || !phone || loading}
-                className="w-full bg-amber-500 hover:bg-amber-400 text-navy-950 font-black py-4 rounded-xl flex items-center justify-center gap-2 shadow-glow active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                {loading ? 'Generando Ticket...' : <>CONTINUAR <ArrowRight size={20}/></>}
-            </button>
-        </div>
+          <UserInfoForm 
+            onBack={() => setStep('select')} 
+            onSubmit={createTicketAndProceed} 
+            loading={loading} 
+            error={error} 
+            initialName={userName} 
+            initialPhone={phone} 
+            countryCode={countryCode} 
+            onCountryCodeChange={setCountryCode} 
+          />
       );
   }
 
   if (step === 'payment_method') {
       return (
-        <div className="space-y-6 animate-in slide-in-from-bottom-10 duration-300 h-full flex flex-col px-4">
-             <button onClick={() => setStep('select')} className="text-slate-400 hover:text-white flex items-center gap-1 text-sm font-bold">
-                <ArrowLeft size={16} /> Cancelar Compra
-            </button>
-
-            <div className="text-center mb-2">
-                <div className="inline-flex items-center gap-2 bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-xs font-bold mb-4 border border-green-500/20">
-                    <CheckCircle size={14}/> Ticket Generado
-                </div>
-                <h2 className="text-2xl font-bold text-white">Realizar Pago</h2>
-                <div className="text-6xl font-mono font-black text-amber-400 my-2 drop-shadow-lg tracking-widest">
-                    {numbers}
-                </div>
-                <p className="text-slate-400 text-sm">Valor a pagar: <span className="text-white font-bold">{formatMoney(ticketPrice)}</span></p>
-                {isSupercharged && <p className='text-xs text-amber-400 font-bold'>¡TICKET POTENCIADO! Juega el Sábado.</p>}
-            </div>
-
-            <div className="space-y-4 flex-1">
-                {userBalance >= ticketPrice && (
-                    <button 
-                        onClick={payWithWallet}
-                        disabled={loading}
-                        className="w-full bg-green-500 hover:bg-green-400 rounded-xl h-16 transition-all active:scale-[0.98] shadow-lg flex items-center px-6 relative overflow-hidden group mb-4 border border-green-400/20"
-                    >
-                        <div className="flex items-center gap-4 w-full">
-                            <div className="w-10 h-10 bg-navy-950/20 rounded-lg flex items-center justify-center shrink-0">
-                                 <Wallet size={20} className="text-navy-950" />
-                            </div>
-                            <div className="text-left flex-1">
-                                <span className="text-navy-950 font-black text-lg block leading-tight">USAR TU SALDO</span>
-                                <span className="text-navy-900 font-bold text-xs">Disponible: {formatMoney(userBalance)}</span>
-                            </div>
-                            <CheckCircle size={24} className="text-navy-950 shrink-0" />
-                        </div>
-                    </button>
-                )}
-
-                <button 
-                    onClick={payWithMercadoPago}
-                    disabled={loading}
-                    className="w-full bg-[#009EE3] hover:bg-[#008CC9] rounded-xl h-16 transition-all active:scale-[0.98] shadow-lg flex items-center px-6 relative overflow-hidden group"
-                >
-                    <div className="flex items-center gap-4 w-full">
-                        <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
-                             <CreditCard size={20} className="text-white" />
-                        </div>
-                        <div className="text-left flex-1">
-                            <span className="text-white font-black text-lg block leading-tight">PAGAR CON MERCADO PAGO</span>
-                            <span className="text-blue-100 text-xs font-medium">PSE, Tarjetas, Nequi, Efecty</span>
-                        </div>
-                        <ArrowRight size={24} className="text-white group-hover:translate-x-1 transition-transform shrink-0" />
-                    </div>
-                    {loading && <div className="absolute inset-0 bg-navy-950/50 z-20 flex items-center justify-center"><div className="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full"></div></div>}
-                </button>
-            </div>
-            
-            {error && (
-                <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex flex-col gap-2 animate-pulse text-center mt-auto">
-                    <div className="flex items-center justify-center gap-2 text-red-400 text-xs font-bold">
-                        <AlertTriangle size={16} className="shrink-0" /> 
-                        <span>{error}</span>
-                    </div>
-                </div>
-            )}
-        </div>
+          <Payment 
+            onBack={() => setStep('select')} 
+            onPayWithWallet={payWithWallet} 
+            onPayWithMercadoPago={payWithMercadoPago} 
+            loading={loading} 
+            error={error} 
+            numbers={numbers} 
+            ticketPrice={ticketPrice} 
+            userBalance={userBalance} 
+            isSupercharged={isSupercharged} 
+            formatMoney={formatMoney} 
+          />
       );
   }
 
   return (
-    <div className="flex flex-col h-full justify-end pb-4 space-y-4 px-4">
+    <div className="flex flex-col h-full justify-end pb-2 space-y-2 px-4">
         <div className="flex-1 flex flex-col justify-center items-center">
-            <div className="text-center space-y-2 mb-6">
-                <h2 className="text-xl font-bold text-white">Elige tus 4 Cifras</h2>
-                <p className="text-slate-400 text-xs uppercase" dangerouslySetInnerHTML={{ __html: dynamicMessage.replace(/(\$\d{1,3}(?:\.\d{3})*)/g, '<span class="font-bold text-white">$1</span>') }}></p>
+            <div className="text-center space-y-1 mb-3">
+                <h2 className="text-lg font-bold text-white">Elige tus 4 Cifras</h2>
+                <p className="text-slate-400 text-[10px] uppercase" dangerouslySetInnerHTML={{ __html: dynamicMessage.replace(/(\$\d{1,3}(?:\.\d{3})*)/g, '<span class="font-bold text-white">$1</span>') }}></p>
                  {isSupercharged && settings?.superchargePrizeName && (
                     <div className="text-center">
-                        <p className="text-amber-400 font-bold text-xs uppercase animate-pulse">
+                        <p className="text-amber-400 font-bold text-[10px] uppercase animate-pulse">
                             Y JUEGA TAMBIÉN POR {settings.superchargePrizeName}
                         </p>
-                        <p className="text-slate-400 font-bold text-[10px] uppercase">
+                        <p className="text-slate-400 font-bold text-[9px] uppercase">
                            (Juega el Sábado con el Acumulado)
                         </p>
                     </div>
@@ -316,98 +211,66 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
             </div>
 
             {settings.superchargeMultiplier > 1 && (
-                <div className={`w-full max-w-sm mx-auto rounded-lg transition-all mb-4 overflow-hidden relative`}>
+                <div className={`w-full max-w-sm mx-auto rounded-lg transition-all mb-2 overflow-hidden relative`}>
                     <button 
                         onClick={() => setIsSupercharged(!isSupercharged)}
                         className={`w-full transition-all active:scale-95 disabled:opacity-50 ${isSupercharged ? 'bg-amber-400 text-navy-950' : 'bg-navy-800 text-amber-400'}`}
                     >
-                        <div className="flex items-center justify-between p-3">
-                            <Zap size={24} className="-ml-1" />
+                        <div className="flex items-center justify-between p-2">
+                            <Zap size={20} className="-ml-1" />
                             <div className="text-center">
-                                <span className="font-bold uppercase tracking-wider block">Potenciado</span>
-                                <span className="font-black text-xl">x{settings.superchargeMultiplier}</span>
+                                <span className="font-bold uppercase tracking-wider block text-sm">Potenciado</span>
+                                <span className="font-black text-lg">x{settings.superchargeMultiplier}</span>
                             </div>
                             {settings.superchargePrizeImage && (
-                                <img src={settings.superchargePrizeImage} alt="Premio Potenciado" className="w-24 h-auto rounded-md" />
+                                <img src={settings.superchargePrizeImage} alt="Premio Potenciado" className="w-20 h-auto rounded-md" />
                             )}
                         </div>
                     </button>
                 </div>
             )}
 
-            <div className={`w-full max-w-sm mx-auto flex flex-col items-center justify-center relative mb-4`}>
-                <div className="flex items-center justify-center gap-3">
-                    {loading ? (
-                        [...Array(4)].map((_, i) => (
-                            <div key={i} className="w-16 h-20 bg-navy-900 rounded-xl flex items-center justify-center animate-pulse">
-                                <div className="w-4 h-4 bg-navy-700 rounded-full"></div>
-                            </div>
-                        ))
-                    ) : (
-                        [...Array(4)].map((_, i) => (
-                            <div key={i} className={`w-16 h-20 bg-navy-900 rounded-xl flex items-center justify-center border-2 ${error ? 'border-red-500/50' : 'border-navy-800'} shadow-inner`}>
-                                <span className={`text-5xl font-mono font-bold ${numbers[i] ? 'text-white' : 'text-navy-700'}`}>
-                                    {numbers[i] || '-'}
-                                </span>
-                            </div>
-                        ))
-                    )}
-                </div>
-                {error && (
-                    <div className="absolute -bottom-6 left-0 right-0 flex items-center justify-center gap-1 text-red-400 text-xs font-bold">
-                        <AlertTriangle size={12} /> {error}
-                    </div>
-                )}
-            </div>
+            <NumberDisplay numbers={numbers} loading={loading} error={error} />
 
         </div>
 
-      <div className="w-full max-w-sm mx-auto">
-         {numbers.length < 4 ? (
-            <div className="grid grid-cols-3 gap-3">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-                <button
-                    key={num}
-                    onClick={() => handleInput(num.toString())}
-                    disabled={loading}
-                    className="bg-navy-700 hover:bg-navy-600 text-2xl font-bold py-4 rounded-lg transition-all text-white active:bg-navy-500"
-                >
-                    {num}
-                </button>
-                ))}
-                <button onClick={handleDelete} className="bg-navy-700 text-red-400/80 font-bold py-4 rounded-lg flex items-center justify-center hover:text-red-400 active:bg-navy-500"><Trash2 size={24} /></button>
-                <button onClick={() => handleInput('0')} disabled={loading} className="bg-navy-700 hover:bg-navy-600 text-2xl font-bold py-4 rounded-lg transition-all text-white active:bg-navy-500">0</button>
-                <button 
-                    onClick={handleRandom}
-                    disabled={loading}
-                    className="bg-navy-700 hover:bg-navy-600 text-amber-400 py-3 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
-                >
-                    <Dices size={18} /> {loading ? '...' : 'Aleatorio'}
-                </button>
-            </div>
-         ) : (
-            <div className="space-y-3">
-                 <div className="flex items-center justify-center gap-3">
-                    <button onClick={handleClear} className="text-slate-400 font-bold p-3 rounded-lg flex items-center justify-center hover:text-white transition-colors text-xs uppercase gap-1"><Keyboard size={16} /> Digitar</button>
-                    <span className="text-slate-600">|</span>
-                    <button onClick={handleRandom} className="text-amber-400/80 font-bold p-3 rounded-lg flex items-center justify-center hover:text-amber-400 transition-colors text-xs uppercase gap-1"><Dices size={16} /> Aleatorio</button>
-                </div>
+        {numbers.length === 4 ? (
+            <div className="w-full max-w-sm mx-auto space-y-2">
+                <NumberInput 
+                    numbers={numbers} 
+                    loading={loading} 
+                    error={error} 
+                    onInput={handleInput} 
+                    onDelete={handleDelete} 
+                    onClear={handleClear} 
+                    onRandom={handleRandom} 
+                />
                 <button 
                     onClick={validateAndProceed} 
                     disabled={loading}
-                    className='w-full bg-green-500 hover:bg-green-600 text-white rounded-2xl p-4 transition-all active:scale-[0.98] shadow-[0_0_40px_rgba(34,197,94,0.3)] border border-green-400/50 flex items-center justify-between'
+                    className='w-full bg-green-500 hover:bg-green-600 text-white rounded-xl p-3 transition-all active:scale-[0.98] shadow-[0_0_40px_rgba(34,197,94,0.3)] border border-green-400/50 flex items-center justify-between'
                 >
-                    <div className='flex items-center gap-3'>
-                        <ShieldCheck size={32} />
-                        <span className='text-xl font-black tracking-wide'>Verificar y Pagar</span>
+                    <div className='flex items-center gap-2'>
+                        <ShieldCheck size={24} />
+                        <span className='text-lg font-black tracking-wide'>Verificar y Pagar</span>
                     </div>
-                    <div className='bg-white/10 px-4 py-2 rounded-lg text-lg font-bold'>
+                    <div className='bg-white/10 px-3 py-1 rounded-lg text-base font-bold'>
                         {formatMoney(ticketPrice)}
                     </div>
                 </button>
             </div>
-         )}
-      </div>
+        ) : (
+             <NumberInput 
+                numbers={numbers} 
+                loading={loading} 
+                error={error} 
+                onInput={handleInput} 
+                onDelete={handleDelete} 
+                onClear={handleClear} 
+                onRandom={handleRandom} 
+            />
+        )}
+      
     </div>
   );
 }

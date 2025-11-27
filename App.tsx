@@ -59,6 +59,16 @@ const App: React.FC = () => {
       });
   };
 
+  const showHome = () => {
+    window.history.replaceState({}, '', '/');
+    setCurrentView('home');
+  };
+
+  const showWallet = () => {
+    window.history.replaceState({}, '', '/');
+    setCurrentView('wallet');
+  };
+
   const handleBuySuccess = (stickerCode: string) => {
     setVerifyCode(stickerCode);
     setCurrentView('verify');
@@ -75,23 +85,20 @@ const App: React.FC = () => {
       case 'home':
         return <HomePage onBuyClick={handleBuyClick} />;
       case 'buy':
-        return <BuyStickerPage onSuccess={handleBuySuccess} onBack={() => setCurrentView('home')} isSupercharged={isSuperchargedFromHome} />;
+        return <BuyStickerPage onSuccess={handleBuySuccess} onBack={showHome} isSupercharged={isSuperchargedFromHome} />;
       case 'wallet':
         return <WalletPage onSuccess={handleBuySuccess} />;
       case 'admin':
         return <AdminDashboard />;
       case 'verify':
-        return <VerifyTicketPage code={verifyCode} onHome={() => setCurrentView('home')} />;
+        return <VerifyTicketPage code={verifyCode} onHome={showHome} onWallet={showWallet} />;
       default:
         return <HomePage onBuyClick={handleBuyClick} />;
     }
   };
 
   if (currentView === 'verify') {
-      return <VerifyTicketPage code={verifyCode} onHome={() => {
-          window.history.pushState({}, '', '/');
-          setCurrentView('home');
-      }} />;
+      return <VerifyTicketPage code={verifyCode} onHome={showHome} onWallet={showWallet} />;
   }
 
   return (

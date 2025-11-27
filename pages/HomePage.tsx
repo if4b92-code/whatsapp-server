@@ -112,7 +112,7 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
                 
                 <div className="mb-6 w-full">
                     <div className="text-[10px] text-amber-300 font-bold uppercase tracking-widest mb-1">Gran Ticket de Oro Semanal</div>
-                    <div className="text-6xl font-black text-white tracking-tighter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] font-mono">
+                    <div className="text-4xl font-black text-white tracking-tighter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] font-mono">
                         {formatMoney(settings.jackpotAmount)}
                     </div>
                     <div className="text-sm font-bold text-green-300 bg-green-500/10 px-3 py-1 rounded-full inline-block mt-2 border border-green-500/20">
@@ -152,7 +152,7 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
                       <Clover size={24} />
                   </div>
                   <h3 className="text-blue-200 font-bold text-sm mb-1">1. Afortudiario</h3>
-                  <div className="text-2xl font-black text-white font-mono mt-auto">{formatMoney(settings.dailyPrizeAmount)}</div>
+                  <div className="text-xl font-black text-white font-mono mt-auto">{formatMoney(settings.dailyPrizeAmount)}</div>
                   {dailyLottery && 
                     <p className="text-[10px] text-slate-400 mt-2">
                         Juega {new Date().getDay() === 0 ? 'MAÑANA' : 'HOY'} con <b className="text-blue-300">{dailyLottery.lottery_name}</b> a las {dailyLottery.lottery_time}. Tu número juega TODA la semana.
@@ -171,7 +171,7 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
                       <Star size={24} />
                   </div>
                   <h3 className="text-amber-200 font-bold text-sm mb-1">2. Ticket de Oro</h3>
-                  <div className="text-2xl font-black text-white font-mono mt-auto">{formatMoney(settings.jackpotAmount)}</div>
+                  <div className="text-xl font-black text-white font-mono mt-auto">{formatMoney(settings.jackpotAmount)}</div>
                   {saturdayLottery && <p className="text-[10px] text-slate-400 mt-2">Juega el Sábado con la <b className="text-amber-300">{saturdayLottery.lottery_name}</b> a las {saturdayLottery.lottery_time}.</p>}
                </div>
             </div>
@@ -186,7 +186,7 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
                       <Users size={24} />
                   </div>
                   <h3 className="text-purple-200 font-bold text-sm mb-1">3. El Elegido</h3>
-                  <div className="text-xl font-black text-white leading-tight mt-auto">¡GANADOR<br/>GARANTIZADO!</div>
+                  <div className="text-lg font-black text-white leading-tight mt-auto">¡GANADOR<br/>GARANTIZADO!</div>
                   <p className="text-[10px] text-slate-400 mt-2">¡Todos los días un ganador! Oportunidad de ganar aún si no coincide tu número.</p>
                </div>
             </div>
@@ -201,7 +201,7 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
                       <Heart size={24} />
                   </div>
                   <h3 className="text-green-200 font-bold text-sm mb-1">4. Donación al Azar</h3>
-                  <div className="text-2xl font-black text-white font-mono mt-auto">{formatMoney(settings.accumulatedPool)}</div>
+                  <div className="text-xl font-black text-white font-mono mt-auto">{formatMoney(settings.accumulatedPool)}</div>
                   <p className="text-[10px] text-slate-300 mt-2">APOYO PARA EMPRENDEDORES. Tus donaciones impulsan sueños.</p>
                </div>
             </div>
