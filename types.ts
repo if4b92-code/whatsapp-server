@@ -27,6 +27,9 @@ export interface GlobalSettings {
   winningNumber?: string;
   winningLottery?: string;
   winningDate?: string;
+  superchargePrizeName?: string;
+  superchargePrizeImage?: string;
+  superchargeMultiplier?: number;
 
   // General Config
   ticketPrice: number; // Single price for the combo ticket

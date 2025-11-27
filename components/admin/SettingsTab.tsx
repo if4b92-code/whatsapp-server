@@ -1,7 +1,7 @@
 
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { GlobalSettings } from '../../types';
-import { DollarSign, CreditCard, Save, AlertTriangle } from 'lucide-react';
+import { DollarSign, CreditCard, Save, AlertTriangle, Zap } from 'lucide-react';
 import { dbService } from '../../services/db';
 
 interface SettingsTabProps {
@@ -20,7 +20,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ initialSettings }) => 
   };
 
   if (!settings) {
-    return <div className="flex justify-center mt-20"><div className="animate-spin w-8 h-8 border-4 border-brand-500 rounded-full border-t-transparent"></div></div>;
+    return <div className="flex justify-center mt-20"><div className="animate-spin w-8 h-8 border-brand-500 rounded-full border-t-transparent"></div></div>;
   }
 
   return (
@@ -71,6 +71,37 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ initialSettings }) => 
                     onChange={(e: ChangeEvent<HTMLInputElement>) => setSettings(prev => prev ? {...prev, topBuyerPrize: parseInt(e.target.value) || 0} : null)} 
                     className="w-full bg-navy-900 border border-navy-700 rounded-lg p-3 text-white font-mono text-sm focus:border-brand-500 outline-none" 
                 />
+           </div>
+       </div>
+
+       <div className="space-y-4 border-b border-white/10 pb-6">
+           <h3 className="text-purple-400 font-bold uppercase text-sm flex items-center gap-2"><Zap size={16}/> Supercarga</h3>
+           <div className="space-y-2">
+               <label className="text-[10px] text-slate-400 uppercase font-bold">Nombre del Premio Supercarga</label>
+               <input 
+                   type="text" 
+                   value={settings.superchargePrizeName || ''} 
+                   onChange={(e: ChangeEvent<HTMLInputElement>) => setSettings(prev => prev ? {...prev, superchargePrizeName: e.target.value} : null)} 
+                   className="w-full bg-navy-900 border border-navy-700 rounded-lg p-3 text-white font-mono text-sm focus:border-purple-500 outline-none" 
+               />
+           </div>
+           <div className="space-y-2">
+               <label className="text-[10px] text-slate-400 uppercase font-bold">URL de la Imagen del Premio</label>
+               <input 
+                   type="text" 
+                   value={settings.superchargePrizeImage || ''} 
+                   onChange={(e: ChangeEvent<HTMLInputElement>) => setSettings(prev => prev ? {...prev, superchargePrizeImage: e.target.value} : null)} 
+                   className="w-full bg-navy-900 border border-navy-700 rounded-lg p-3 text-white font-mono text-sm focus:border-purple-500 outline-none" 
+               />
+           </div>
+           <div className="space-y-2">
+               <label className="text-[10px] text-slate-400 uppercase font-bold">Multiplicador de Supercarga</label>
+               <input 
+                   type="number" 
+                   value={settings.superchargeMultiplier || 0} 
+                   onChange={(e: ChangeEvent<HTMLInputElement>) => setSettings(prev => prev ? {...prev, superchargeMultiplier: parseInt(e.target.value) || 0} : null)} 
+                   className="w-full bg-navy-900 border border-navy-700 rounded-lg p-3 text-white font-mono text-sm focus:border-purple-500 outline-none" 
+               />
            </div>
        </div>
 
