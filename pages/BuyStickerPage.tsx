@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
 import { paymentService } from '../services/paymentService';
+import { wompiService } from '../services/wompiService';
 import { GlobalSettings, Sticker } from '../types';
 import { NumberDisplay } from '../components/buy/NumberDisplay';
 import { NumberInput } from '../components/buy/NumberInput';
@@ -157,6 +158,22 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
           }
       }
   };
+  
+  const payWithWompi = async () => {
+    if (!settings || !pendingSticker) return;
+    setLoading(true);
+    try {
+      const paymentLink = await wompiService.createPaymentLink(pendingSticker, { fullName: userName, phone: `${countryCode}${phone}`, countryCode }, settings);
+      if (paymentLink) {
+        window.location.href = paymentLink;
+      } else {
+        setError("Error al crear el link de pago de Wompi.");
+      }
+    } catch (err: any) {
+      setError("Error WOMPI: " + err.message);
+    }
+    setLoading(false);
+  };
 
   if (!settings) return <div className="flex items-center justify-center h-full"><div className="animate-spin w-8 h-8 border-4 border-amber-400 rounded-full border-t-transparent"></div></div>;
   
@@ -180,13 +197,16 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
           <Payment 
             onBack={() => setStep('select')} 
             onPayWithWallet={payWithWallet} 
-            onPayWithMercadoPago={payWithMercadoPago} 
+            onPayWithMercadoPago={payWithMercadoPago}
+            onPayWithWompi={payWithWompi}
             loading={loading} 
             error={error} 
             numbers={numbers} 
             ticketPrice={ticketPrice} 
             userBalance={userBalance} 
             isSupercharged={isSupercharged} 
+            mercadoPagoEnabled={settings.mercadoPagoEnabled || false}
+            wompiEnabled={settings.wompiEnabled || false}
             formatMoney={formatMoney} 
           />
       );

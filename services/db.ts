@@ -13,7 +13,8 @@ const DEFAULT_SETTINGS: GlobalSettings = {
   nextDrawDateWeekly: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
   mpAccessToken: '', 
   mpPublicKey: '', 
-  adminWhatsApp: '573001234567'
+  adminWhatsApp: '573001234567',
+  wompiPrivateKey: 'prv_prod_zZma8P3xiq490UuKw4EzH2CI8g6I1pBc'
 };
 
 const toSticker = (s: any): Sticker => {

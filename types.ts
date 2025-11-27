@@ -39,6 +39,13 @@ export interface GlobalSettings {
   // Mercado Pago Config
   mpAccessToken?: string;       
   mpPublicKey?: string;         
+  mercadoPagoEnabled?: boolean;
+
+  // Wompi Config
+  wompiPublicKey?: string;
+  wompiPrivateKey?: string;
+  wompiTestMode?: boolean;
+  wompiEnabled?: boolean;
   
   // Soporte
   adminWhatsApp?: string;

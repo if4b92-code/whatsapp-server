@@ -1,7 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { dbService } from '../services/db';
 import { paymentService } from '../services/paymentService';
+import { wompiService } from '../services/wompiService';
 import { Sticker as StickerType, GlobalSettings } from '../types';
 import { Ticket } from 'lucide-react';
 import { Login } from '../components/Login';
@@ -14,7 +14,7 @@ interface Props {
 
 export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
   const [stickers, setStickers] = useState<StickerType[]>([]);
-  const [loading, setLoading] = useState(true); // Start loading initially to check session
+  const [loading, setLoading] = useState(true);
   
   const [step, setStep] = useState<'phone' | 'code'>('phone');
   const [phone, setPhone] = useState('');
@@ -144,6 +144,22 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
           }
       }
   };
+
+  const handlePayWithWompi = async (sticker: StickerType) => {
+      if (!settings) return;
+      setLoading(true);
+      try {
+          const paymentLink = await wompiService.createPaymentLink(sticker, sticker.ownerData, settings);
+          if (paymentLink) {
+              window.location.href = paymentLink;
+          } else {
+              alert("Error al crear el link de pago de Wompi.");
+          }
+      } catch (err: any) {
+          alert("Error WOMPI: " + err.message);
+      }
+      setLoading(false);
+  };
   
   const handleLogout = () => {
       localStorage.removeItem('userPhone');
@@ -163,7 +179,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
 
   const formatMoney = (val: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
 
-  if (loading && !isLoggedIn) { // Initial loading screen
+  if (loading && !isLoggedIn) {
     return <div className="flex justify-center mt-20"><div className="animate-spin w-8 h-8 border-4 border-brand-500 rounded-full border-t-transparent"></div></div>;
   }
 
@@ -218,9 +234,12 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
                   settings={settings}
                   onPayWithWallet={handlePayWithWallet}
                   onPayWithMercadoPago={handlePayWithMercadoPago}
+                  onPayWithWompi={handlePayWithWompi}
                   loading={loading}
                   walletBalance={walletBalance}
                   formatMoney={formatMoney}
+                  mercadoPagoEnabled={settings?.mercadoPagoEnabled || false}
+                  wompiEnabled={settings?.wompiEnabled || false}
               />
             ))}
           </div>

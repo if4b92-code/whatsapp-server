@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sticker as StickerType, GlobalSettings, LotterySchedule } from '../types';
 import { QRCodeCanvas } from 'qrcode.react';
-import { Calendar, Clock, Star, Trophy, X, Zap } from 'lucide-react';
+import { Calendar, Clock, Star, Trophy, X, Zap, CreditCard, Wallet } from 'lucide-react';
 import { dbService } from '../services/db';
 
 interface Props {
@@ -9,12 +9,26 @@ interface Props {
   settings: GlobalSettings | null;
   onPayWithWallet: (sticker: StickerType) => void;
   onPayWithMercadoPago: (sticker: StickerType) => void;
+  onPayWithWompi: (sticker: StickerType) => void; // Added Wompi handler
   loading: boolean;
   walletBalance: number;
   formatMoney: (value: number) => string;
+  mercadoPagoEnabled: boolean; // Added for dynamic buttons
+  wompiEnabled: boolean; // Added for dynamic buttons
 }
 
-export const Sticker: React.FC<Props> = ({ sticker, settings, onPayWithWallet, onPayWithMercadoPago, loading, walletBalance, formatMoney }) => {
+export const Sticker: React.FC<Props> = ({ 
+    sticker, 
+    settings, 
+    onPayWithWallet, 
+    onPayWithMercadoPago, 
+    onPayWithWompi, 
+    loading, 
+    walletBalance, 
+    formatMoney, 
+    mercadoPagoEnabled,
+    wompiEnabled 
+}) => {
   const [paymentOptionsVisible, setPaymentOptionsVisible] = useState<string | null>(null);
   const [lotterySchedule, setLotterySchedule] = useState<LotterySchedule[]>([]);
 
@@ -47,7 +61,7 @@ export const Sticker: React.FC<Props> = ({ sticker, settings, onPayWithWallet, o
     prizeAmount = isSaturdayPurchase ? settings.jackpotAmount : settings.dailyPrizeAmount;
   }
 
-  const price = sticker.price || (sticker.isSupercharged && settings ? settings.ticketPrice * settings.superchargeMultiplier : settings?.ticketPrice);
+  const price = sticker.price || (sticker.isSupercharged && settings ? settings.ticketPrice * settings.superchargeMultiplier : settings?.ticketPrice) || 0;
 
   const renderDailyLotteryInfo = () => {
     if (!settings) return null;
@@ -144,14 +158,33 @@ export const Sticker: React.FC<Props> = ({ sticker, settings, onPayWithWallet, o
                 {isPending ? (
                      <div className="relative w-full h-full">
                         {paymentOptionsVisible === sticker.id ? (
-                            <div className='absolute right-0 top-0 w-[120px] bg-navy-800 rounded-lg p-1.5 flex flex-col gap-1.5 z-10 animate-in fade-in duration-300'>
+                            <div className='absolute right-0 top-0 w-[120px] bg-navy-800 rounded-lg p-1.5 flex flex-col gap-1.5 z-10 animate-in fade-in duration-300 shadow-2xl'>
                                 <button onClick={() => setPaymentOptionsVisible(null)} className='absolute -top-1.5 -right-1.5 bg-red-500 rounded-full p-0.5 z-20'><X size={12}/></button>
-                                <button 
-                                    onClick={() => onPayWithWallet(sticker)} 
-                                    disabled={loading || walletBalance < (price || 0)}
-                                    className='w-full flex-1 bg-green-500 text-navy-950 rounded-md text-[10px] font-black disabled:bg-gray-500 disabled:opacity-50'
-                                >CON SALDO</button>
-                                <button onClick={() => onPayWithMercadoPago(sticker)} className='w-full flex-1 bg-blue-500 text-white rounded-md text-[10px] font-black'>MERCADO PAGO</button>
+                                
+                                {walletBalance >= price && (
+                                    <button 
+                                        onClick={() => onPayWithWallet(sticker)} 
+                                        disabled={loading}
+                                        className='w-full flex items-center justify-center gap-2 p-2 bg-green-500 text-navy-950 rounded-md text-[10px] font-black disabled:bg-gray-500 disabled:opacity-50'
+                                    ><Wallet size={12}/> CON SALDO</button>
+                                )}
+
+                                {mercadoPagoEnabled && (
+                                    <button 
+                                        onClick={() => onPayWithMercadoPago(sticker)} 
+                                        disabled={loading}
+                                        className='w-full flex items-center justify-center gap-2 p-2 bg-blue-500 text-white rounded-md text-[10px] font-black disabled:bg-gray-500 disabled:opacity-50'
+                                    ><CreditCard size={12}/> MERCADOPAGO</button>
+                                )}
+
+                                {wompiEnabled && (
+                                     <button 
+                                        onClick={() => onPayWithWompi(sticker)} 
+                                        disabled={loading}
+                                        className='w-full flex items-center justify-center gap-2 p-2 bg-purple-600 text-white rounded-md text-[10px] font-black disabled:bg-gray-500 disabled:opacity-50'
+                                    ><CreditCard size={12}/> WOMPI</button>
+                                )}
+
                             </div>
                         ) : (
                             <button 

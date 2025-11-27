@@ -6,12 +6,15 @@ interface Props {
   onBack: () => void;
   onPayWithWallet: () => void;
   onPayWithMercadoPago: () => void;
+  onPayWithWompi: () => void;
   loading: boolean;
   error: string | null;
   numbers: string;
   ticketPrice: number;
   userBalance: number;
   isSupercharged: boolean;
+  mercadoPagoEnabled: boolean;
+  wompiEnabled: boolean;
   formatMoney: (val: number) => string;
 }
 
@@ -19,12 +22,15 @@ export const Payment: React.FC<Props> = ({
   onBack,
   onPayWithWallet,
   onPayWithMercadoPago,
+  onPayWithWompi,
   loading,
   error,
   numbers,
   ticketPrice,
   userBalance,
   isSupercharged,
+  mercadoPagoEnabled,
+  wompiEnabled,
   formatMoney,
 }) => {
   return (
@@ -65,23 +71,45 @@ export const Payment: React.FC<Props> = ({
           </button>
         )}
 
-        <button
-          onClick={onPayWithMercadoPago}
-          disabled={loading}
-          className="w-full bg-[#009EE3] hover:bg-[#008CC9] rounded-xl h-16 transition-all active:scale-[0.98] shadow-lg flex items-center px-6 relative overflow-hidden group"
-        >
-          <div className="flex items-center gap-4 w-full">
-            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
-              <CreditCard size={20} className="text-white" />
+        {mercadoPagoEnabled && (
+          <button
+            onClick={onPayWithMercadoPago}
+            disabled={loading}
+            className="w-full bg-[#009EE3] hover:bg-[#008CC9] rounded-xl h-16 transition-all active:scale-[0.98] shadow-lg flex items-center px-6 relative overflow-hidden group"
+          >
+            <div className="flex items-center gap-4 w-full">
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
+                <CreditCard size={20} className="text-white" />
+              </div>
+              <div className="text-left flex-1">
+                <span className="text-white font-black text-lg block leading-tight">PAGAR CON MERCADO PAGO</span>
+                <span className="text-blue-100 text-xs font-medium">PSE, Tarjetas, Nequi, Efecty</span>
+              </div>
+              <ArrowRight size={24} className="text-white group-hover:translate-x-1 transition-transform shrink-0" />
             </div>
-            <div className="text-left flex-1">
-              <span className="text-white font-black text-lg block leading-tight">PAGAR CON MERCADO PAGO</span>
-              <span className="text-blue-100 text-xs font-medium">PSE, Tarjetas, Nequi, Efecty</span>
-            </div>
-            <ArrowRight size={24} className="text-white group-hover:translate-x-1 transition-transform shrink-0" />
-          </div>
-          {loading && <div className="absolute inset-0 bg-navy-950/50 z-20 flex items-center justify-center"><div className="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full"></div></div>}
-        </button>
+            {loading && <div className="absolute inset-0 bg-navy-950/50 z-20 flex items-center justify-center"><div className="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full"></div></div>}
+          </button>
+        )}
+
+        {wompiEnabled && (
+            <button
+                onClick={onPayWithWompi}
+                disabled={loading}
+                className="w-full bg-purple-600 hover:bg-purple-500 rounded-xl h-16 transition-all active:scale-[0.98] shadow-lg flex items-center px-6 relative overflow-hidden group"
+            >
+                <div className="flex items-center gap-4 w-full">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
+                        <CreditCard size={20} className="text-white" />
+                    </div>
+                    <div className="text-left flex-1">
+                        <span className="text-white font-black text-lg block leading-tight">PAGAR CON WOMPI</span>
+                        <span className="text-purple-100 text-xs font-medium">PSE, Tarjetas, Nequi</span>
+                    </div>
+                    <ArrowRight size={24} className="text-white group-hover:translate-x-1 transition-transform shrink-0" />
+                </div>
+                {loading && <div className="absolute inset-0 bg-navy-950/50 z-20 flex items-center justify-center"><div className="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full"></div></div>}ƒ
+            </button>
+        )}
       </div>
 
       {error && (
