@@ -26,7 +26,14 @@ export const WalletHeader: React.FC<Props> = ({ stickersCount, countdown, settin
           <span className="font-mono font-bold text-white">{countdown}</span>
         </div>
         <div className="flex justify-between items-center text-sm">
-          <span className="font-bold text-slate-400">Número Ganador:</span>
+            <div>
+                <span className="font-bold text-slate-400">Número Ganador:</span>
+                {settings?.winningNumber && (
+                    <p className="text-xs text-slate-500 font-bold">
+                        {settings.winningDate || 'Hoy'} con {settings.winningLottery || 'Lotería de Bogotá'}
+                    </p>
+                )}
+            </div>
           <div className="flex items-center gap-2">
             <Trophy size={16} className="text-yellow-400" />
             <span className="font-mono font-bold text-2xl text-yellow-400 tracking-widest">{settings?.winningNumber || '----'}</span>

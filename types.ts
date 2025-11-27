@@ -25,6 +25,8 @@ export interface GlobalSettings {
   dailyPrizeAmount: number; // Fixed daily prize
   topBuyerPrize: number; // Prize for the user with most tickets
   winningNumber?: string;
+  winningLottery?: string;
+  winningDate?: string;
 
   // General Config
   ticketPrice: number; // Single price for the combo ticket
