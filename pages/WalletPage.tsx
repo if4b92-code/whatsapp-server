@@ -25,6 +25,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
   const [settings, setSettings] = useState<GlobalSettings | null>(null);
   const [walletBalance, setWalletBalance] = useState(0);
   const [countdown, setCountdown] = useState('');
+  const [isSellerView, setIsSellerView] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -97,6 +98,12 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
     setStickers(sortedStickers);
     setWalletBalance(balance);
     setSettings(settingsData);
+
+    // Check if it's a seller view
+    const sellerMode = localStorage.getItem('sellerMode') === 'true';
+    const sellerPhone = localStorage.getItem('sellerPhone');
+    setIsSellerView(sellerMode && sellerPhone === userPhone);
+
     setLoading(false);
   }
 
@@ -240,6 +247,7 @@ export const WalletPage: React.FC<Props> = ({ onSuccess }) => {
                   formatMoney={formatMoney}
                   mercadoPagoEnabled={settings?.mercadoPagoEnabled || false}
                   wompiEnabled={settings?.wompiEnabled || false}
+                  isSellerView={isSellerView}
               />
             ))}
           </div>

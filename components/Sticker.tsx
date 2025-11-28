@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sticker as StickerType, GlobalSettings, LotterySchedule } from '../types';
 import { QRCodeCanvas } from 'qrcode.react';
-import { Calendar, Clock, Star, Trophy, X, Zap, CreditCard, Wallet } from 'lucide-react';
+import { Calendar, Clock, Star, Trophy, X, Zap, CreditCard, Wallet, User } from 'lucide-react';
 import { dbService } from '../services/db';
 
 interface Props {
@@ -15,6 +15,7 @@ interface Props {
   formatMoney: (value: number) => string;
   mercadoPagoEnabled: boolean; // Added for dynamic buttons
   wompiEnabled: boolean; // Added for dynamic buttons
+  isSellerView?: boolean;
 }
 
 export const Sticker: React.FC<Props> = ({ 
@@ -27,7 +28,8 @@ export const Sticker: React.FC<Props> = ({
     walletBalance, 
     formatMoney, 
     mercadoPagoEnabled,
-    wompiEnabled 
+    wompiEnabled,
+    isSellerView
 }) => {
   const [paymentOptionsVisible, setPaymentOptionsVisible] = useState<string | null>(null);
   const [lotterySchedule, setLotterySchedule] = useState<LotterySchedule[]>([]);
@@ -122,7 +124,7 @@ export const Sticker: React.FC<Props> = ({
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
           <div className="flex justify-between items-center px-3 py-1">
             <span className="font-black text-[10px] uppercase tracking-widest text-navy-950 flex items-center gap-1">
-              <Star size={10} fill="currentColor" /> {isPending ? 'PENDIENTE DE PAGO' : 'GanarApp'}
+              <Star size={10} fill="currentColor" /> {isPending ? 'PENDIENTE DE PAGO' : (isSellerView ? 'VENDIDO A:' : 'GanarApp')}
             </span>
             <span className="bg-navy-950/20 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-mono font-bold text-navy-950">{sticker.code}</span>
           </div>
@@ -130,6 +132,11 @@ export const Sticker: React.FC<Props> = ({
 
         <div className="p-4 flex items-start justify-between relative bg-gradient-to-b from-navy-900 to-navy-950">
           <div className='flex-1 pr-4'>
+             {isSellerView && sticker.ownerData && (
+                <div className="text-xs text-slate-300 mb-2 flex items-center gap-2">
+                    <User size={14} /> {sticker.ownerData.fullName}
+                </div>
+            )}
             <div className="flex items-center gap-2 mb-2">
                 <div className="text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded flex items-center gap-1">
                     <Zap size={8} fill="currentColor"/> Diario

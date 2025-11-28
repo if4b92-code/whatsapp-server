@@ -105,7 +105,7 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
     setStep('user_info');
   };
 
-  const createTicketAndProceed = async (name: string, p: string) => {
+  const createTicketAndProceed = async (name: string, p: string, sellerName?: string, sellerPhone?: string) => {
       setUserName(name);
       setPhone(p);
       
@@ -115,7 +115,7 @@ export const BuyStickerPage: React.FC<Props> = ({ onSuccess, onBack, isSuperchar
           fullName: name, 
           phone: fullPhone, 
           countryCode 
-      }, ticketPrice, isSupercharged);
+      }, ticketPrice, isSupercharged, sellerName, sellerPhone);
       
       if (result.success && result.sticker) {
           setPendingSticker(result.sticker);
