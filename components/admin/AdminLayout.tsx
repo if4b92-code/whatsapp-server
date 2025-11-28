@@ -9,7 +9,7 @@ interface AdminLayoutProps {
   onLogout: () => void;
   children: ReactNode;
   activeTab: string;
-  setActiveTab: (tab: 'sales' | 'users' | 'top_buyers' | 'sellers' | 'config' | 'lotteries' | 'movements') => void;
+  setActiveTab: (tab: 'sales' | 'users' | 'sellers' | 'config' | 'lotteries' | 'movements') => void;
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({
@@ -100,7 +100,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       <div className="bg-navy-900 p-1 rounded-xl flex overflow-x-auto scrollbar-hide">
         <button onClick={() => setActiveTab('sales')} className={`flex-1 min-w-[70px] py-2 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wide ${activeTab === 'sales' ? 'bg-brand-500 text-navy-950' : 'text-slate-400'}`}>Ventas</button>
         <button onClick={() => setActiveTab('users')} className={`flex-1 min-w-[70px] py-2 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wide ${activeTab === 'users' ? 'bg-brand-500 text-navy-950' : 'text-slate-400'}`}>Usuarios</button>
-        <button onClick={() => setActiveTab('top_buyers')} className={`flex-1 min-w-[70px] py-2 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wide ${activeTab === 'top_buyers' ? 'bg-brand-500 text-navy-950' : 'text-slate-400'}`}>Líderes</button>
         <button onClick={() => setActiveTab('sellers')} className={`flex-1 min-w-[70px] py-2 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wide ${activeTab === 'sellers' ? 'bg-brand-500 text-navy-950' : 'text-slate-400'}`}>Vendedores</button>
         <button onClick={() => setActiveTab('lotteries')} className={`flex-1 min-w-[70px] py-2 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wide ${activeTab === 'lotteries' ? 'bg-brand-500 text-navy-950' : 'text-slate-400'}`}>Loterías</button>
         <button onClick={() => setActiveTab('config')} className={`flex-1 min-w-[70px] py-2 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wide ${activeTab === 'config' ? 'bg-brand-500 text-navy-950' : 'text-slate-400'}`}>Ajustes</button>

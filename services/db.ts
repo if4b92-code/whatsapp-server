@@ -32,10 +32,16 @@ const getPurchaseConfirmationMessage = (ticketNumber: string) => {
     return `¡Tu compra ha sido exitosa! 🚀\n\nNúmero: *${ticketNumber}*\nCódigo de Verificación: *${verificationCode}*\n\nGracias por jugar en GanarApp. ¡Mucha suerte! 🍀`;
 }
 
+const getSellerConfirmationMessage = (sticker: Sticker) => {
+    const commission = sticker.price * 0.30;
+    return `¡Venta exitosa! ✅\n\nHas vendido el número *${sticker.numbers}* a *${sticker.ownerData.fullName}*.\n\nComisión ganada: *${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(commission)}*\n\n¡Sigue así! 💰`;
+};
+
+
 const _createCommission = async (sticker: Sticker) => {
     if (!isCloudEnabled || !supabase || !sticker.seller_phone) return;
 
-    const commissionAmount = sticker.price * 0.03; // 3% commission
+    const commissionAmount = sticker.price * 0.30; // 30% commission
 
     const { error } = await supabase
         .from('seller_commissions')
@@ -232,7 +238,7 @@ export const dbService = {
       .update({ status: 'active', purchasedAt: new Date().toISOString() })
       .eq('id', stickerId)
       .eq('status', 'pending')
-      .select('*, is_supercharged, seller_phone, price, id, numbers, userId')
+      .select('*, is_supercharged, seller_phone, price, id, numbers, userId, ownerData')
       .single();
 
     if (updateStickerError) {
@@ -248,9 +254,15 @@ export const dbService = {
     });
 
     if(updatedSticker) {
-        const message = getPurchaseConfirmationMessage(updatedSticker.numbers);
+        const sticker = toSticker(updatedSticker);
+        const message = getPurchaseConfirmationMessage(sticker.numbers);
         await whatsappService.sendMessage(phone, message);
-        await _createCommission(toSticker(updatedSticker));
+        await _createCommission(sticker);
+
+        if (sticker.seller_phone) {
+            const sellerMessage = getSellerConfirmationMessage(sticker);
+            await whatsappService.sendMessage(sticker.seller_phone, sellerMessage);
+        }
     }
     
     return { success: true, message: 'Pago completado con éxito.' };
@@ -341,18 +353,20 @@ export const dbService = {
     return data || [];
   },
   
-  getSellerLeaderboard: async (): Promise<{ seller_phone: string, total_tickets_sold: number, total_commissions: number }[]> => {
-      if (!isCloudEnabled || !supabase) return [];
+  getSellerSales: async (): Promise<Sticker[]> => {
+    if (!isCloudEnabled || !supabase) return [];
 
-      const { data, error } = await supabase
-      .from('seller_leaderboard')
-      .select('*');
+    const { data, error } = await supabase
+      .from('stickers')
+      .select('*, is_supercharged, ownerData, price, seller_name, seller_phone')
+      .not('seller_phone', 'is', null)
+      .order('purchasedAt', { ascending: false });
 
-      if (error) {
-          console.error('Error getting seller leaderboard:', error);
-          return [];
-      }
-      return data || [];
+    if (error) {
+      console.error('Error getting seller sales:', error);
+      return [];
+    }
+    return (data || []).map(toSticker);
   },
 
   createPendingTicket: async (numbers: string, ownerData: OwnerData, price: number, isSupercharged: boolean, sellerName?: string, sellerPhone?: string): Promise<{ success: boolean, message: string, sticker?: Sticker }> => {
@@ -408,7 +422,7 @@ export const dbService = {
       .from('stickers')
       .update({ status: 'active' })
       .eq('id', stickerId)
-      .select('*, is_supercharged, seller_phone, price, id, numbers, userId')
+      .select('*, is_supercharged, seller_phone, price, id, numbers, userId, ownerData')
       .single();
 
     if (error) {
@@ -417,9 +431,15 @@ export const dbService = {
     }
 
     if(updatedSticker) {
-        const message = getPurchaseConfirmationMessage(updatedSticker.numbers);
-        await whatsappService.sendMessage(updatedSticker.userId, message);
-        await _createCommission(toSticker(updatedSticker));
+        const sticker = toSticker(updatedSticker);
+        const message = getPurchaseConfirmationMessage(sticker.numbers);
+        await whatsappService.sendMessage(sticker.userId, message);
+        await _createCommission(sticker);
+
+        if (sticker.seller_phone) {
+            const sellerMessage = getSellerConfirmationMessage(sticker);
+            await whatsappService.sendMessage(sticker.seller_phone, sellerMessage);
+        }
     }
 
     return true;

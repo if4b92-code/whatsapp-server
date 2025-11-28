@@ -5,25 +5,17 @@ import { Sticker, GlobalSettings } from '../types';
 import { AdminLayout } from '../components/admin/AdminLayout';
 import { SalesTab } from '../components/admin/SalesTab';
 import { UsersTab } from '../components/admin/UsersTab';
-import { TopBuyersTab } from '../components/admin/TopBuyersTab';
 import { SellersTab } from '../components/admin/SellersTab';
 import { LotteriesTab } from '../components/admin/LotteriesTab';
 import { SettingsTab } from '../components/admin/SettingsTab';
 import { MovementsTab } from '../components/admin/MovementsTab';
 
-interface Seller {
-  seller_phone: string;
-  total_tickets_sold: number;
-  total_commissions: number;
-}
-
 export const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [settings, setSettings] = useState<GlobalSettings | null>(null);
-  const [topBuyers, setTopBuyers] = useState<{docId: string, name: string, count: number}[]>([]);
-  const [sellers, setSellers] = useState<Seller[]>([]);
-  const [activeTab, setActiveTab] = useState<'sales' | 'users' | 'top_buyers' | 'sellers' | 'config' | 'lotteries' | 'movements'>('sales');
+  const [sellerSales, setSellerSales] = useState<Sticker[]>([]);
+  const [activeTab, setActiveTab] = useState<'sales' | 'users' | 'sellers' | 'config' | 'lotteries' | 'movements'>('sales');
   const [loading, setLoading] = useState(false);
   const [raffleWinner, setRaffleWinner] = useState<Sticker | null>(null);
   const [rafflePrize, setRafflePrize] = useState(0);
@@ -33,8 +25,7 @@ export const AdminDashboard: React.FC = () => {
     setLoading(true);
     const s = await dbService.getAllStickersGlobal();
     const set = await dbService.getSettings();
-    const buyers = await dbService.getTopBuyers();
-    const sellerData = await dbService.getSellerLeaderboard();
+    const sellerData = await dbService.getSellerSales();
     
     const phones = new Set(s.map(sticker => sticker.ownerData.phone));
     
@@ -48,8 +39,7 @@ export const AdminDashboard: React.FC = () => {
     
     setStickers(sortedStickers);
     setSettings(set);
-    setTopBuyers(buyers);
-    setSellers(sellerData);
+    setSellerSales(sellerData);
     setUserBalances(balances);
     setLoading(false);
   };
@@ -101,8 +91,7 @@ export const AdminDashboard: React.FC = () => {
                 loadData={loadData} 
             />}
           {activeTab === 'users' && <UsersTab stickers={stickers} userBalances={userBalances} loadData={loadData} />}
-          {activeTab === 'top_buyers' && <TopBuyersTab topBuyers={topBuyers} />}
-          {activeTab === 'sellers' && <SellersTab sellers={sellers} />}
+          {activeTab === 'sellers' && <SellersTab sales={sellerSales} />}
           {activeTab === 'lotteries' && <LotteriesTab stickers={stickers} settings={settings} loadData={loadData} />}
           {activeTab === 'config' && settings && <SettingsTab initialSettings={settings} />}
           {activeTab === 'movements' && <MovementsTab />}
