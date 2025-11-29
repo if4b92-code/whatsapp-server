@@ -84,7 +84,7 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
                   ¡Participa por la <strong>{settings.superchargePrizeName}</strong> y más!
                 </p>
                 <p className="text-[10px] md:text-xs text-amber-400/80 font-semibold pl-8 mt-1">
-                  (Juega el Sábado con el Acumulado)
+                  (Válido el Sábado con el Acumulado)
                 </p>
               </div>
               <div className={`w-14 h-8 flex-shrink-0 rounded-full flex items-center p-1 transition-colors ${isSuperchargeActive ? 'bg-amber-400' : 'bg-navy-700'}`}>
@@ -109,7 +109,7 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
             <div className="bg-amber-400 p-2 text-center shadow-lg relative z-10">
                 <h1 className="text-slate-900 font-black uppercase tracking-wider text-xs flex items-center justify-center gap-2">
                     <Star size={14} className="text-slate-900/50" />
-                    ¡7 OPORTUNIDADES!
+                    7 Disparadores de Valor
                     <Star size={14} className="text-slate-900/50" />
                 </h1>
             </div>
@@ -119,12 +119,9 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
                 <div className="mb-6 w-full flex flex-col justify-around items-center">
                     {/* Daily Prize */}
                     <div className="flex-1 text-center px-2">
-                        <div className="text-xs text-blue-300 font-bold uppercase tracking-widest mb-1">PREMIO DE HOY</div>
+                        <div className="text-xs text-blue-300 font-bold uppercase tracking-widest mb-1">HOY</div>
                         <div className="text-4xl font-black text-white tracking-tight drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] font-mono">
                             {formatMoney(settings.dailyPrizeAmount)}
-                        </div>
-                        <div className="text-sm font-bold text-slate-300 mt-1">
-                           + ¡El Elegido!
                         </div>
                     </div>
 
@@ -133,25 +130,22 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
 
                     {/* Saturday Jackpot */}
                     <div className="flex-1 text-center px-2">
-                        <div className="text-xs text-amber-300 font-bold uppercase tracking-widest mb-1">GRAN ACUMULADO SÁBADO</div>
+                        <div className="text-xs text-amber-300 font-bold uppercase tracking-widest mb-1">TICKET DE ORO SÁBADO</div>
                         <div className="text-4xl font-black text-white tracking-tight drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] font-mono">
                             {formatMoney(settings.jackpotAmount)}
                         </div>
                         <div className="text-sm font-bold text-green-300 mt-1">
-                           + Donación al Azar
+                           + Donación Impulso
                         </div>
                     </div>
                 </div>
 
                 <button 
                     onClick={() => onBuyClick(currentTicketPrice, isSuperchargeActive)}
-                    className="w-full bg-amber-400 hover:bg-amber-300 text-slate-900 font-black text-lg py-4 rounded-xl shadow-[0_0_30px_rgba(250,204,21,0.4)] transition-all active:scale-[0.97] flex items-center justify-between px-6"
+                    className="w-full bg-amber-400 hover:bg-amber-300 text-slate-900 font-black text-lg py-3 rounded-xl shadow-[0_0_30px_rgba(250,204,21,0.4)] transition-all active:scale-[0.97] flex flex-col items-center justify-center px-6"
                 >
-                    <span>COMPRAR TICKET</span>
-                    <span className="flex items-center gap-2">
-                      <span className="bg-slate-900/20 px-3 py-1 rounded-md text-sm font-mono">{formatMoney(currentTicketPrice)}</span>
-                      <ChevronRight strokeWidth={4} size={22} />
-                    </span>
+                    <span>COMPRAR TICKET ADC</span>
+                    <span className="text-xs font-medium text-slate-900/80">(Certificado de Activo Digital)</span>
                 </button>
             </div>
         </div>
@@ -161,7 +155,7 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
       <div className="space-y-4">
           <div className="flex items-center gap-2 px-1">
               <div className="w-1.5 h-6 bg-amber-400 rounded-full"></div>
-              <h2 className="text-white font-bold text-xl tracking-wide">¿CÓMO GANO?</h2>
+              <h2 className="text-white font-bold text-xl tracking-wide">¿DISPARADORES DE VALOR?</h2>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
@@ -178,7 +172,7 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
                   <div className="text-xl font-black text-white font-mono mt-auto">{formatMoney(settings.dailyPrizeAmount)}</div>
                   {dailyLottery && 
                     <p className="text-[10px] text-slate-400 mt-2">
-                        Juega {new Date().getDay() === 0 ? 'MAÑANA' : 'HOY'} con <b className="text-blue-300">{dailyLottery.lottery_name}</b> a las {dailyLottery.lottery_time}. Tu número juega TODA la semana.
+                        {new Date().getDay() === 0 ? 'MAÑANA' : 'HOY'} con <b className="text-blue-300">{dailyLottery.lottery_name}</b> a las {dailyLottery.lottery_time}. Tu número participa TODA la semana.
                     </p>
                   }
                </div>
@@ -195,7 +189,7 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
                   </div>
                   <h3 className="text-amber-200 font-bold text-sm mb-1">2. Ticket de Oro</h3>
                   <div className="text-xl font-black text-white font-mono mt-auto">{formatMoney(settings.jackpotAmount)}</div>
-                  {saturdayLottery && <p className="text-[10px] text-slate-400 mt-2">Juega el Sábado con la <b className="text-amber-300">{saturdayLottery.lottery_name}</b> a las {saturdayLottery.lottery_time}.</p>}
+                  {saturdayLottery && <p className="text-[10px] text-slate-400 mt-2">El Sábado con la <b className="text-amber-300">{saturdayLottery.lottery_name}</b> a las {saturdayLottery.lottery_time}.</p>}
                </div>
             </div>
 
@@ -209,12 +203,12 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
                       <Users size={24} />
                   </div>
                   <h3 className="text-purple-200 font-bold text-sm mb-1">3. El Elegido</h3>
-                  <div className="text-lg font-black text-white leading-tight mt-auto">¡GANADOR<br/>GARANTIZADO!</div>
+                  <div className="text-lg font-black text-white leading-tight mt-auto">¡ACREEDOR<br/>GARANTIZADO!</div>
                   <p className="text-[10px] text-slate-400 mt-2">¡Todos los días un ganador! Oportunidad de ganar aún si no coincide tu número.</p>
                </div>
             </div>
 
-            {/* 4. Donación al Azar */}
+            {/* 4. Donación Impulso */}
             <div className="bg-green-900/50 rounded-2xl p-4 border-2 border-green-500/60 relative overflow-hidden group hover:border-green-400/80 transition-colors shadow-lg">
                <div className="absolute right-[-10px] top-[-10px] text-green-600/10 group-hover:text-green-500/15 transition-colors group-hover:scale-110">
                   <Heart size={64} strokeWidth={1.5} />
@@ -223,7 +217,7 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
                   <div className="w-10 h-10 rounded-xl bg-green-500/20 text-green-300 flex items-center justify-center mb-3">
                       <Heart size={24} />
                   </div>
-                  <h3 className="text-green-200 font-bold text-sm mb-1">4. Donación al Azar</h3>
+                  <h3 className="text-green-200 font-bold text-sm mb-1">4. Donación Impulso</h3>
                   <div className="text-xl font-black text-white font-mono mt-auto">{formatMoney(settings.accumulatedPool)}</div>
                   <p className="text-[10px] text-slate-300 mt-2">APOYO PARA EMPRENDEDORES. Tus donaciones impulsan sueños.</p>
                </div>
@@ -235,7 +229,7 @@ export const HomePage: React.FC<Props> = ({ onBuyClick }) => {
       <div className="flex gap-3 items-start p-4 bg-navy-900/50 rounded-2xl border border-white/10">
         <Info size={24} className="text-slate-500 shrink-0 mt-0.5" />
         <p className="text-xs text-slate-400 leading-relaxed">
-          <b>GanarApp</b> - Un solo ticket te da acceso a todo: Afortudiario, Ticket de Oro, El Elegido y Donación al Azar. ¡Mucha suerte! 
+          <b>GanarApp</b> - Un solo ADC te da acceso a todo: Afortudiario, Ticket de Oro, El Elegido y Donación Impulso. ¡Mucho éxito! 
           <br/><a href="#" className="opacity-60 text-[10px] underline hover:opacity-100">Aplican Términos y Condiciones.</a>
         </p>
       </div>

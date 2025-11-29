@@ -42,7 +42,7 @@ export const NumberInput: React.FC<Props> = ({
             disabled={loading}
             className="bg-navy-700 hover:bg-navy-600 text-amber-400 py-2.5 rounded-lg font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1 transition-all active:scale-95 disabled:opacity-50"
           >
-            <Dices size={16} /> {loading ? '...' : 'Aleatorio'}
+            <Dices size={16} /> {loading ? '...' : 'Generar'}
           </button>
         </div>
       ) : (
@@ -50,7 +50,7 @@ export const NumberInput: React.FC<Props> = ({
           <div className="flex items-center justify-center gap-3">
             <button onClick={onClear} className="text-slate-400 font-bold p-2.5 rounded-lg flex items-center justify-center hover:text-white transition-colors text-[10px] uppercase gap-1"><Keyboard size={14} /> Digitar</button>
             <span className="text-slate-600">|</span>
-            <button onClick={onRandom} className="text-amber-400/80 font-bold p-2.5 rounded-lg flex items-center justify-center hover:text-amber-400 transition-colors text-[10px] uppercase gap-1"><Dices size={14} /> Aleatorio</button>
+            <button onClick={onRandom} className="text-amber-400/80 font-bold p-2.5 rounded-lg flex items-center justify-center hover:text-amber-400 transition-colors text-[10px] uppercase gap-1"><Dices size={14} /> Generar</button>
           </div>
         </div>
       )}

@@ -2,6 +2,7 @@
 import { Sticker, GlobalSettings, OwnerData, LotterySchedule, LotteryResult } from '../types';
 import { supabase, isCloudEnabled, uuidv4 } from './client';
 import { whatsappService } from './whatsappService';
+import { notificationService } from './notificationService';
 
 const DEFAULT_SETTINGS: GlobalSettings = {
   jackpotAmount: 50000000,
@@ -9,7 +10,7 @@ const DEFAULT_SETTINGS: GlobalSettings = {
   dailyPrizeAmount: 200000,
   topBuyerPrize: 50000, 
   ticketPrice: 5000, 
-  officialLotteryNameWeekly: "Lotería de Boyacá",
+  officialLotteryNameWeekly: "Sorteo Semanal",
   nextDrawDateWeekly: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
   mpAccessToken: '', 
   mpPublicKey: '', 
@@ -24,19 +25,6 @@ const toSticker = (s: any): Sticker => {
         isSupercharged,
     } as Sticker;
 }
-
-const getPurchaseConfirmationMessage = (ticketNumber: string) => {
-    const today = new Date();
-    const verificationDate = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
-    const verificationCode = `GA-${verificationDate}-${ticketNumber}`;
-    return `¡Tu compra ha sido exitosa! 🚀\n\nNúmero: *${ticketNumber}*\nCódigo de Verificación: *${verificationCode}*\n\nGracias por jugar en GanarApp. ¡Mucha suerte! 🍀`;
-}
-
-const getSellerConfirmationMessage = (sticker: Sticker) => {
-    const commission = sticker.price * 0.30;
-    return `¡Venta exitosa! ✅\n\nHas vendido el número *${sticker.numbers}* a *${sticker.ownerData.fullName}*.\n\nComisión ganada: *${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(commission)}*\n\n¡Sigue así! 💰`;
-};
-
 
 const _createCommission = async (sticker: Sticker) => {
     if (!isCloudEnabled || !supabase || !sticker.seller_phone) return;
@@ -255,12 +243,12 @@ export const dbService = {
 
     if(updatedSticker) {
         const sticker = toSticker(updatedSticker);
-        const message = getPurchaseConfirmationMessage(sticker.numbers);
+        const message = notificationService.getPurchaseConfirmationMessage(sticker);
         await whatsappService.sendMessage(phone, message);
         await _createCommission(sticker);
 
         if (sticker.seller_phone) {
-            const sellerMessage = getSellerConfirmationMessage(sticker);
+            const sellerMessage = notificationService.getSellerConfirmationMessage(sticker);
             await whatsappService.sendMessage(sticker.seller_phone, sellerMessage);
         }
     }
@@ -287,7 +275,7 @@ export const dbService = {
         data: { phone, code },
     });
 
-    const message = `¡Código de Acceso a GanarApp! 🔐\n\nTu código de verificación es: *${code}*\n\nÚsalo para iniciar sesión de forma segura.`;
+    const message = notificationService.getAccessCodeMessage(code);
     await whatsappService.sendMessage(phone, message);
 
     return code;
@@ -432,12 +420,12 @@ export const dbService = {
 
     if(updatedSticker) {
         const sticker = toSticker(updatedSticker);
-        const message = getPurchaseConfirmationMessage(sticker.numbers);
+        const message = notificationService.getPurchaseConfirmationMessage(sticker);
         await whatsappService.sendMessage(sticker.userId, message);
         await _createCommission(sticker);
 
         if (sticker.seller_phone) {
-            const sellerMessage = getSellerConfirmationMessage(sticker);
+            const sellerMessage = notificationService.getSellerConfirmationMessage(sticker);
             await whatsappService.sendMessage(sticker.seller_phone, sellerMessage);
         }
     }

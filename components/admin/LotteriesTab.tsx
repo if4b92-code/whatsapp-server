@@ -38,7 +38,7 @@ export const LotteriesTab: React.FC<LotteriesTabProps> = ({ stickers, settings, 
         return;
     }
 
-    if (!window.confirm(`¿Estás seguro de establecer ${winningNumber} como número ganador?`)) {
+    if (!window.confirm(`¿Estás seguro de establecer ${winningNumber} como número del acreedor?`)) {
         return;
     }
 
@@ -63,22 +63,22 @@ export const LotteriesTab: React.FC<LotteriesTabProps> = ({ stickers, settings, 
                 ticketNumber: winner.numbers
             };
         } else {
-            alert("No se encontró un ticket ganador activo para este número (se guardará el sorteo sin ganador).");
+            alert("No se encontró un ADC activo para este número (se guardará la generación sin acreedor).");
         }
         
         const savedResult = await dbService.addLotteryResult(newResult);
 
         if (!savedResult) {
-            throw new Error("El resultado del sorteo no se pudo guardar en la base de datos.");
+            throw new Error("El resultado de la generación no se pudo guardar en la base de datos.");
         }
 
-        alert(`Número ganador ${winningNumber} establecido y guardado en el historial.`);
+        alert(`Número del acreedor ${winningNumber} establecido y guardado en el historial.`);
         await fetchHistory(); 
         await loadData();
 
     } catch (error) {
-        console.error("--- DEBUG: ERROR AL GUARDAR SORTEO ---", error);
-        alert("¡ERROR! No se pudo guardar el sorteo. Por favor, abre la consola de desarrollador para ver los detalles del problema y envíamelos.");
+        console.error("--- DEBUG: ERROR AL GUARDAR GENERACIÓN ---", error);
+        alert("¡ERROR! No se pudo guardar la generación. Por favor, abre la consola de desarrollador para ver los detalles del problema y envíamelos.");
     }
 };
 
@@ -88,7 +88,7 @@ const handleSendWhatsAppNotification = (info: NotificationInfo) => {
     if (!info.phone) return;
 
     const cleanPhone = info.phone.replace(/\+/g, '');
-    const message = `¡Felicidades ${info.name}! 🎉\n\nHas ganado el sorteo de GanarApp con el número *${info.winningNumber}*.\n\n*Premio Ganado:* ${formatMoney(info.prizeAmount)}\n\n¡Contáctanos a este número para reclamar tu premio!`;
+    const message = `¡Felicidades ${info.name}! 🎉\n\nHas sido seleccionado como acreedor en GanarApp con el número *${info.winningNumber}*.\n\n*Retribución:* ${formatMoney(info.prizeAmount)}\n\n¡Contáctanos a este número para coordinar la entrega de tu retribución!`;
     
     const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
@@ -101,7 +101,7 @@ const handleSendBaileysNotification = async (info: NotificationInfo) => {
     }
 
     const cleanPhone = info.phone.replace(/\+/g, '');
-    const message = `¡Felicidades ${info.name}! 🎉\n\nHas ganado el sorteo de GanarApp con el número *${info.winningNumber}*.\n\n*Premio Ganado:* ${formatMoney(info.prizeAmount)}\n\n¡Contáctanos a este número para reclamar tu premio!`;
+    const message = `¡Felicidades ${info.name}! 🎉\n\nHas sido seleccionado como acreedor en GanarApp con el número *${info.winningNumber}*.\n\n*Retribución:* ${formatMoney(info.prizeAmount)}\n\n¡Contáctanos a este número para coordinar la entrega de tu retribución!`;
 
     try {
         const response = await fetch('http://localhost:3001/send-message', {
@@ -114,7 +114,7 @@ const handleSendBaileysNotification = async (info: NotificationInfo) => {
         if (response.ok) {
             alert('Mensaje de felicitación enviado por Baileys.');
         } else {
-            alert('Error al enviar el mensaje por Baileys.');
+            alert('Error al enviar el mensaje por Baileleys.');
         }
     } catch (error) {
         console.error('Error sending Baileys message:', error);
@@ -127,7 +127,7 @@ const handleSendBaileysNotification = async (info: NotificationInfo) => {
     <div className="space-y-4">
         <div className="bg-navy-card p-4 rounded-xl border border-white/5">
             <h3 className="text-brand-400 font-bold uppercase text-sm flex items-center gap-2">
-                <Award size={18} /> Ingresar Número Ganador
+                <Award size={18} /> Registrar Número Acreedor
             </h3>
             <div className="flex gap-2 mt-4">
                 <input 
@@ -150,11 +150,11 @@ const handleSendBaileysNotification = async (info: NotificationInfo) => {
         {lotteryWinner && (
             <div className="bg-green-500/10 border border-green-500/30 p-4 rounded-xl animate-in fade-in duration-500">
                 <h3 className="text-green-400 font-bold uppercase text-sm flex items-center gap-2">
-                    <Trophy size={18} /> ¡Ticket Ganador Encontrado!
+                    <Trophy size={18} /> ¡ADC Acreedor Encontrado!
                 </h3>
                 <div className="mt-3 bg-navy-900/50 p-3 rounded-lg">
                     <p className="text-sm text-slate-300">Número: <span className="font-bold text-white tracking-widest">{lotteryWinner.numbers}</span></p>
-                    <p className="text-sm text-slate-300">Ganador: <span className="font-bold text-white">{lotteryWinner.ownerData.fullName}</span></p>
+                    <p className="text-sm text-slate-300">Acreedor: <span className="font-bold text-white">{lotteryWinner.ownerData.fullName}</span></p>
                     <p className="text-sm text-slate-300">Teléfono: <span className="font-bold text-white">{lotteryWinner.ownerData.phone}</span></p>
                 </div>
                 <button
@@ -169,7 +169,7 @@ const handleSendBaileysNotification = async (info: NotificationInfo) => {
                     }}
                     className="mt-4 w-full bg-green-500 hover:bg-green-400 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2"
                 >
-                    <MessageCircle size={16} /> Notificar Ganador por WhatsApp
+                    <MessageCircle size={16} /> Notificar Acreedor por WhatsApp
                 </button>
                 <button
                     onClick={() => {
@@ -190,16 +190,16 @@ const handleSendBaileysNotification = async (info: NotificationInfo) => {
 
         <div className="space-y-4 pt-4 border-t border-white/10">
             <h3 className="text-slate-400 font-bold uppercase text-sm flex items-center gap-2">
-                <Calendar size={18} /> Historial de Sorteos
+                <Calendar size={18} /> Historial de Generaciones
             </h3>
             {lotteryHistory.length === 0 ? (
-                <div className="text-center text-sm text-slate-500 py-10">Aún no hay sorteos registrados.</div>
+                <div className="text-center text-sm text-slate-500 py-10">Aún no hay generaciones registradas.</div>
             ) : (
                 lotteryHistory.map(result => (
                     <div key={result.id} className="bg-navy-card p-4 rounded-xl border border-white/5">
                         <div className="flex justify-between items-center">
                             <div>
-                                <p className="text-sm text-slate-300">Número Sorteado: <span className="font-bold text-brand-400 tracking-widest">{result.winningNumber}</span></p>
+                                <p className="text-sm text-slate-300">Número Generado: <span className="font-bold text-brand-400 tracking-widest">{result.winningNumber}</span></p>
                                 <p className="text-[10px] text-slate-500">{new Date(result.drawnAt).toLocaleString('es-CO')}</p>
                             </div>
                             <div className="text-right">
@@ -210,7 +210,7 @@ const handleSendBaileysNotification = async (info: NotificationInfo) => {
                             <div className="mt-3 pt-3 border-t border-white/10 bg-green-500/5 p-3 rounded-lg">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <p className="text-xs text-green-300 font-bold">Ganador:</p>
+                                        <p className="text-xs text-green-300 font-bold">Acreedor:</p>
                                         <p className="text-sm text-white">{result.winnerInfo.name}</p>
                                         <p className="text-sm text-slate-400 font-mono">{result.winnerInfo.phone}</p>
                                     </div>
@@ -247,7 +247,7 @@ const handleSendBaileysNotification = async (info: NotificationInfo) => {
                                 </div>
                             </div>
                         ) : (
-                            <div className="mt-2 text-center text-xs text-slate-500 font-bold py-1">SIN GANADOR</div>
+                            <div className="mt-2 text-center text-xs text-slate-500 font-bold py-1">SIN ACREEDOR</div>
                         )}
                     </div>
                 ))

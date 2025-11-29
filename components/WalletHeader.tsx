@@ -19,18 +19,18 @@ export const WalletHeader: React.FC<Props> = ({ stickersCount, countdown, settin
         </h2>
       </div>
 
-      {/* Lottery Info */}
+      {/* Info */}
       <div className="bg-navy-card p-4 rounded-xl border border-white/5 space-y-3">
         <div className="flex justify-between items-center text-sm">
-          <span className="font-bold text-slate-400">Próximo Sorteo:</span>
+          <span className="font-bold text-slate-400">Próxima Retribución:</span>
           <span className="font-mono font-bold text-white">{countdown}</span>
         </div>
         <div className="flex justify-between items-center text-sm">
             <div>
-                <span className="font-bold text-slate-400">Número Ganador:</span>
+                <span className="font-bold text-slate-400">Número Acreedor:</span>
                 {settings?.winningNumber && (
                     <p className="text-xs text-slate-500 font-bold">
-                        {settings.winningDate || 'Hoy'} con {settings.winningLottery || 'Lotería de Bogotá'}
+                        {settings.winningDate || 'Hoy'} con la retribución de {(settings.winningLottery || '').replace('Lotería de ', '')}
                     </p>
                 )}
             </div>

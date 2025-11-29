@@ -54,11 +54,11 @@ export const Sticker: React.FC<Props> = ({
 
   const verifyUrl = `${window.location.origin}/?view=verify&code=${sticker.code}`;
   const isPending = sticker.status === 'pending';
-  const isWinner = !isPending && settings?.winningNumber && settings.winningNumber === sticker.numbers;
+  const isAcreedor = !isPending && settings?.winningNumber && settings.winningNumber === sticker.numbers;
   const purchasedDate = new Date(sticker.purchasedAt);
   
   let prizeAmount = 0;
-  if (isWinner && settings) {
+  if (isAcreedor && settings) {
     const isSaturdayPurchase = purchasedDate.getDay() === 6;
     prizeAmount = isSaturdayPurchase ? settings.jackpotAmount : settings.dailyPrizeAmount;
   }
@@ -69,18 +69,19 @@ export const Sticker: React.FC<Props> = ({
     if (!settings) return null;
 
     let infoText = '';
+    const formatLotteryName = (name: string) => name.replace('Lotería de ', '');
 
     if (dayOfWeek === 6) { // It's Saturday
         if (saturdayLottery) {
-            infoText = `Hoy juega el Acumulado de ${formatMoney(settings.jackpotAmount)} con ${saturdayLottery.lottery_name}`;
+            infoText = `Hoy juega el Acumulado de ${formatMoney(settings.jackpotAmount)} con la retribución de ${formatLotteryName(saturdayLottery.lottery_name)}`;
         }
     } else if (dayOfWeek === 0) { // It's Sunday
         if (currentLottery) { // This is Monday's lottery
-            infoText = `Mañana juega por ${formatMoney(settings.dailyPrizeAmount)} con ${currentLottery.lottery_name}`;
+            infoText = `Mañana juega por ${formatMoney(settings.dailyPrizeAmount)} con la retribución de ${formatLotteryName(currentLottery.lottery_name)}`;
         }
     } else { // It's a weekday
         if (currentLottery) {
-            infoText = `Hoy juega por ${formatMoney(settings.dailyPrizeAmount)} con ${currentLottery.lottery_name}`;
+            infoText = `Hoy juega por ${formatMoney(settings.dailyPrizeAmount)} con la retribución de ${formatLotteryName(currentLottery.lottery_name)}`;
         }
     }
 
@@ -93,13 +94,13 @@ export const Sticker: React.FC<Props> = ({
     );
   };
 
-  if (isWinner) {
+  if (isAcreedor) {
     return (
       <div key={sticker.id} className="group relative">
         <div className="bg-gradient-to-br from-yellow-400 via-amber-300 to-yellow-500 rounded-2xl border-2 border-yellow-200 p-1 shadow-[0_0_25px_rgba(252,211,77,0.8)]">
           <div className="bg-black/20 rounded-xl p-4 flex flex-col items-center justify-center">
             <Trophy size={32} className="text-white mb-2" />
-            <span className="font-black text-4xl text-white tracking-widest drop-shadow-lg">GANADOR</span>
+            <span className="font-black text-4xl text-white tracking-widest drop-shadow-lg">ACREEDOR</span>
             <div className="text-5xl font-mono font-black tracking-widest text-white my-3">{sticker.numbers}</div>
             <div className="text-2xl font-bold text-white mb-3">{formatMoney(prizeAmount)}</div>
             <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded text-sm font-mono font-bold text-white">{sticker.code}</span>
