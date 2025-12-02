@@ -49,6 +49,11 @@ async function connectToWhatsApp() {
             }
         } else if (connection === 'open') {
             logger.info('Opened connection');
+            // Log the gateway URL when the connection is open
+            const gatewayUrl = process.env.RENDER_EXTERNAL_URL;
+            if (gatewayUrl) {
+                logger.info(`Available at your gateway URL: ${gatewayUrl}`);
+            }
         }
     });
 
@@ -74,6 +79,11 @@ async function startServer() {
     // Middlewares
     app.use(cors(corsOptions)); // Enable CORS with detailed options
     app.use(express.json()); // Parse JSON bodies
+
+    // Health check endpoint for Render
+    app.get('/', (req, res) => {
+        res.status(200).json({ status: 'ok', message: 'WhatsApp server is running.' });
+    });
 
     // Define the endpoint to send messages
     app.post('/send-message', async (req, res) => {
@@ -110,3 +120,4 @@ async function startServer() {
 startServer();
 
 console.log('WhatsApp server starting...');
+ 
