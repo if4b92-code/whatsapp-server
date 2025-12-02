@@ -73,6 +73,9 @@ function startServer() {
     const app = express();
     const PORT = process.env.PORT || 3001;
 
+    // Trust the first proxy
+    app.set('trust proxy', 1);
+
     const corsOptions = {
         origin: '*',
         credentials: true,
