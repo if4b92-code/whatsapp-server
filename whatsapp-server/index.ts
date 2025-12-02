@@ -2,7 +2,8 @@
 import makeWASocket, {
     DisconnectReason,
     useMultiFileAuthState,
-    ConnectionState
+    ConnectionState,
+    WASocket
 } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 import path from 'path';
@@ -14,6 +15,9 @@ import cors from 'cors';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Use a variable to store the socket instance
+let sock: WASocket | undefined;
 
 // This function establishes the connection with WhatsApp
 async function connectToWhatsApp() {
@@ -27,11 +31,15 @@ async function connectToWhatsApp() {
         }
     });
 
-    const sock = makeWASocket({
+    // Create a new socket instance
+    const newSock = makeWASocket({
         auth: state,
         browser: ['Chrome', 'Desktop', '20.0.0'],
         logger: logger as any,
     });
+
+    // Assign it to the outer variable
+    sock = newSock;
 
     sock.ev.on('connection.update', (update: Partial<ConnectionState>) => {
         const { connection, lastDisconnect, qr } = update;
@@ -45,11 +53,11 @@ async function connectToWhatsApp() {
             const shouldReconnect = (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
             logger.error('Connection closed due to %s, reconnecting %s', lastDisconnect?.error || 'unknown error', shouldReconnect);
             if (shouldReconnect) {
+                // Re-run the connection logic
                 connectToWhatsApp();
             }
         } else if (connection === 'open') {
             logger.info('Opened connection');
-            // Log the gateway URL when the connection is open
             const gatewayUrl = process.env.RENDER_EXTERNAL_URL;
             if (gatewayUrl) {
                 logger.info(`Available at your gateway URL: ${gatewayUrl}`);
@@ -58,31 +66,31 @@ async function connectToWhatsApp() {
     });
 
     sock.ev.on('creds.update', saveCreds);
-
-    return sock;
 }
 
 // This function starts the Express server
-async function startServer() {
-    const sock = await connectToWhatsApp();
+function startServer() {
     const app = express();
     const PORT = process.env.PORT || 3001;
 
-    // Detailed CORS configuration
     const corsOptions = {
-        origin: '*', // Allow all origins
-        credentials: true, // Allow cookies, authorization headers, etc.
+        origin: '*',
+        credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],
     };
 
-    // Middlewares
-    app.use(cors(corsOptions)); // Enable CORS with detailed options
-    app.use(express.json()); // Parse JSON bodies
+    app.use(cors(corsOptions));
+    app.use(express.json());
 
     // Health check endpoint for Render
     app.get('/', (req, res) => {
-        res.status(200).json({ status: 'ok', message: 'WhatsApp server is running.' });
+        const isConnected = sock?.user;
+        res.status(200).json({ 
+            status: 'ok', 
+            message: 'WhatsApp server is running.',
+            whatsapp_connected: !!isConnected 
+        });
     });
 
     // Define the endpoint to send messages
@@ -92,11 +100,13 @@ async function startServer() {
             return res.status(400).json({ success: false, error: 'Missing "to" or "message" in request body' });
         }
 
+        // Check if the socket is ready
+        if (!sock || !sock.user) {
+            return res.status(503).json({ success: false, error: 'WhatsApp client is not ready. Scan the QR code first.' });
+        }
+
         try {
-            // Format phone number to WhatsApp JID
             const jid = `${to}@s.whatsapp.net`;
-            
-            // Check if the number is registered on WhatsApp
             const [result] = await sock.onWhatsApp(jid) || [];
 
             if (result?.exists) {
@@ -113,6 +123,8 @@ async function startServer() {
 
     app.listen(PORT, () => {
         console.log(`WhatsApp server with Express is listening on port ${PORT}`);
+        // Start WhatsApp connection AFTER the server is listening
+        connectToWhatsApp();
     });
 }
 
@@ -120,4 +132,3 @@ async function startServer() {
 startServer();
 
 console.log('WhatsApp server starting...');
- 
