@@ -61,7 +61,7 @@ async function connectToWhatsApp() {
 async function startServer() {
     const sock = await connectToWhatsApp();
     const app = express();
-    const port = 3001;
+    const PORT = process.env.PORT || 3001;
 
     // Detailed CORS configuration
     const corsOptions = {
@@ -101,8 +101,8 @@ async function startServer() {
         }
     });
 
-    app.listen(port, () => {
-        console.log(`WhatsApp server with Express is listening on http://localhost:${port}`);
+    app.listen(PORT, () => {
+        console.log(`WhatsApp server with Express is listening on port ${PORT}`);
     });
 }
 
